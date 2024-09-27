@@ -1,0 +1,75 @@
+.header {
+    border-bottom: 1px solid #e5e8eb;
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    padding: 12px 40px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.logoLink {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.logoImage {
+    aspect-ratio: 1;
+    object-fit: contain;
+    object-position: center;
+    width: 30px;
+    height: 30px;
+    margin-right: 8px;
+}
+
+.logoText {
+    color: #121417;
+    font: 700 18px/1 Work Sans, -apple-system, Roboto, Helvetica, sans-serif;
+}
+
+.navigation {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    font: 14px Work Sans, sans-serif;
+}
+
+.navList {
+    display: flex;
+    list-style-type: none;
+    gap: 36px;
+}
+
+.navList a {
+    color: #121417;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.authButtons {
+    display: flex;
+    gap: 8px;
+}
+
+@media (max-width: 991px) {
+    .header {
+        max-width: 100%;
+        padding: 0 20px;
+    }
+
+    .navigation {
+        max-width: 100%;
+    }
+
+    .logoText,
+    .navList a {
+        white-space: initial;
+    }
+}

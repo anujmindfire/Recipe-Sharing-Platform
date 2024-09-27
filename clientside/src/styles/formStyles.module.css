@@ -1,0 +1,76 @@
+.formContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    padding: 30px;
+    max-width: 500px;
+    width: 100%;
+}
+
+.formTitle {
+    width: 100%;
+    font-size: 22px;
+    color: #121417;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1;
+    padding: 15px 30px; /* Reduced padding */
+    margin-bottom: 20px; /* Added bottom margin for spacing */
+}
+
+.inputField {
+    width: 100%; /* Make input field take full width */
+    max-width: 500px;
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    width: 100%;
+    max-width: 500px;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #121417;
+}
+
+.buttonContainer {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.prompt {
+    width: 100%;
+    color: #637587;
+    font-weight: 400;
+    text-align: center;
+    padding: 4px 16px 12px;
+}
+
+@media (max-width: 991px) {
+    .formContainer {
+        max-width: 90%;
+        padding: 20px; /* Adjust padding for smaller screens */
+    }
+
+    .formTitle {
+        font-size: 20px; /* Slightly smaller font size for smaller screens */
+    }
+
+    .inputField {
+        width: 100%; /* Full width */
+        max-width: none; /* Remove max-width on small screens */
+    }
+
+    label {
+        width: 100%; /* Full width */
+        max-width: none; /* Remove max-width on small screens */
+    }
+
+    .buttonContainer {
+        width: 100%; /* Full width for button container */
+    }
+}

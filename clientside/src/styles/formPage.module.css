@@ -1,0 +1,31 @@
+.authPage {
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    min-height: 800px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.mainContent {
+    display: flex;
+    width: 100%;
+    align-items: start;
+    justify-content: center;
+    flex: 1;
+    height: 100%;
+    padding: 20px 160px;
+    font: 16px 'Work Sans', sans-serif;
+}
+
+@media (max-width: 991px) {
+    .authPage,
+    .mainContent {
+        max-width: 100%;
+    }
+
+    .mainContent {
+        padding: 0 20px;
+    }
+}
