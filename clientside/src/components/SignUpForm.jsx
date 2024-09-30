@@ -62,7 +62,7 @@ const SignUpForm = () => {
     const onSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch(`${backendURL}/user/signup`, {
+            const response = await fetch(`${backendURL}/user`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
@@ -76,16 +76,16 @@ const SignUpForm = () => {
                 alert(data.message);
             }
         } catch {
-            alert('An error occurred during signup');
+            alert('Something went wrong');
         }
     };
 
     useEffect(() => {
-        const token = localStorage.getItem('accessToken');
-        const userId = localStorage.getItem('userId');
-        if (token) {
-            alert('You are already a loggedIn user, if you are trying to access the register page, please log out first.');
-            navigate(`/${userId}/profile`);
+        const accessToken = localStorage.getItem('accesstoken');
+        const refreshToken = localStorage.getItem('refreshtoken');
+        if (accessToken && refreshToken) {
+            alert('You are already a loggedIn user, if you are trying to access the sign page, please log out first.');
+            navigate('recipes');
         }
     }, [navigate]);
 
@@ -148,7 +148,7 @@ const SignUpForm = () => {
             
             <div className={styles.buttonContainer}>
                 <Button w='300px' type='submit' disabled={isDisabled}>
-                    Sign Up
+                    Sign up
                 </Button>
             </div>
             

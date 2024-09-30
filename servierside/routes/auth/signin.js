@@ -1,5 +1,5 @@
 import userModel from '../../models/user.js';
-import loginHistory from '../../models/loginHistory.js';
+import loginHistoryModel from '../../models/loginHistory.js';
 import { checkRequiredFields, isValidRequest } from '../../validation/validation.js';
 import constant from '../../utils/constant.js';
 import bcrypt from 'bcrypt';
@@ -23,7 +23,7 @@ export const getUserInfo = async (req, res, next) => {
             return res.status(400).send({ status: false, message: constant.auth.invalidCredential });
         }
 
-        const activeSession = await loginHistory.findOne({
+        const activeSession = await loginHistoryModel.findOne({
             userId: userData._id,
             loggedOutAt: null
         });
@@ -56,10 +56,10 @@ export const createToken = async (req, res) => {
             type: 'web'
         };
 
-        const data = await loginHistory.create(body);
+        const data = await loginHistoryModel.create(body);
 
         const tokenData = {
-            id: rowData._id,
+            userId: rowData._id,
             email: rowData.email,
             loginId: data._id
         };
@@ -68,9 +68,9 @@ export const createToken = async (req, res) => {
         const token = jwt.sign(tokenData, process.env.SUPERSECRET, { expiresIn: '1h' });
 
         // Generate refresh token
-        const refreshToken = jwt.sign(tokenData, process.env.REFRESHSECRET, { expiresIn: '7d' });
+        const refreshToken = jwt.sign(tokenData, process.env.REFRESHSECRET, { expiresIn: '7h' });
 
-        await loginHistory.updateMany(
+        await loginHistoryModel.updateMany(
             {
                 userId: rowData._id,
                 type: 'web',
@@ -82,7 +82,7 @@ export const createToken = async (req, res) => {
         );
 
         const objData = {
-            id: rowData._id,
+            userId: rowData._id,
             email: rowData.email,
             name: rowData.name
         };

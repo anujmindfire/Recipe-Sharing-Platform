@@ -19,6 +19,6 @@ const recipeFeedbackSchema = new mongoose.Schema({
     },
 }, { collection: 'recipeFeedback', timestamps: true });
 
-const createRecipeFeedbackModel = () => mongoose.model('RecipeFeedback', recipeFeedbackSchema);
+const recipeFeedbackModel = mongoose.model('RecipeFeedback', recipeFeedbackSchema);
 
-export default createRecipeFeedbackModel;
+export default recipeFeedbackModel;

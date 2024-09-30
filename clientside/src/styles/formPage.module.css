@@ -23,9 +23,6 @@
     .authPage,
     .mainContent {
         max-width: 100%;
-    }
-
-    .mainContent {
         padding: 0 20px;
     }
 }

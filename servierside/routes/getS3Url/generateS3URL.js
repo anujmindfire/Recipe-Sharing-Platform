@@ -43,6 +43,7 @@ export const generateS3URL = async (req, res) => {
         const imageUrl = `https://${process.env.BUCKET}.s3.amazonaws.com/${key}`;
         return res.json({ imageUrl });
     } catch (error) {
+        console.log(error);
         return res.status(400).send({ status: false, message: constant.general.genericError });
     }
 };

@@ -26,7 +26,7 @@ const constant = {
         invalidRatingValue: 'Rating value must be between 1 and 5.',
         recipeNotFound: 'Recipe not found',
         ownRecipeFeedbackError: 'You cannot add feedback to your own recipe',
-        feedbackAlreadyExists: 'You have already added feedback for this recipe. If you wish to change your feedback, please update your existing feedback instead.',
+        feedbackAlreadyExists: 'You have already added feedback for this recipe.',
         feedbackAddedSuccess: 'Feedback Added successfully',
         feedbackUpdatedSuccess: 'Feedback Updated successfully',
         feedbackNotFound: 'Feedback not found',

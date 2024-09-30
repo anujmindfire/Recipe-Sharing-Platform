@@ -1,20 +1,11 @@
 import mongoose from 'mongoose';
 import { isValidMail, isValidName, isValidPassword } from '../validation/validation.js';
-import moment from 'moment';
 import recipeFeedbackModel from '../models/recipeFeedback.js';
 import constant from '../utils/constant.js';
 
 // ************************ Common Function *********************** //
 
 const capitalizeFirstLetter = (string) => string.charAt(0).toUpperCase() + string.slice(1);
-
-const generateResponseObject = (data, count) => ({
-    timestamp: moment().unix(),
-    message: data.length > 0 ? constant.general.fetchData : constant.general.notFoundData,
-    success: true,
-    total: count,
-    data: data,
-});
 
 /**
  * Handles pagination for a global query.
@@ -145,6 +136,5 @@ export {
     globalPagination,
     globalSearch,
     globalFilter,
-    generateResponseObject,
     validateDetails,
 };

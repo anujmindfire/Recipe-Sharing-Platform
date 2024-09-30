@@ -49,17 +49,28 @@ const SignInForm = () => {
 
             const data = await response.json();
             if (response.ok) {
-                localStorage.setItem('accessToken', data.token);
-                localStorage.setItem('userId', data.data.id);
+                localStorage.setItem('accesstoken', data.token);
+                localStorage.setItem('refreshtoken', data.refreshToken);
+                localStorage.setItem('id', data.data.userId);
+                localStorage.setItem('name', data.data.name);
                 alert('Login successful');
-                navigate(`/${data.data.userId}/profile`);
+                navigate('/recipes');
             } else if (data.message) {
                 alert(data.message);
             }
         } catch (err) {
-            alert('An error occurred during login');
+            alert('Something went wrong');
         }
     };
+
+    useEffect(() => {
+        const accessToken = localStorage.getItem('accesstoken');
+        const refreshToken = localStorage.getItem('refreshtoken');
+        if (accessToken && refreshToken) {
+            alert('You are already a loggedIn user, if you are trying to access the sign page, please log out first.');
+            navigate('/recipes');
+        }
+    }, [navigate]);
 
     useEffect(() => {
         setIsDisabled(!validateForm());

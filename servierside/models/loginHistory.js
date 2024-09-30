@@ -10,13 +10,14 @@ const loginHistorySchema = new mongoose.Schema({
         maxlength: 5,
     },
     loggedOutAt: {
-        type: Date
+        type: Date,
+        default: null
     },
     loggedInAt: {
         type: Date
     },
 }, { collection: 'loginHistory', timestamps: true });
 
-const createLoginHistoryModel = () => mongoose.model('LoginHistory', loginHistorySchema);
+const loginHistoryModel = mongoose.model('LoginHistory', loginHistorySchema);
 
-export default createLoginHistoryModel;
+export default loginHistoryModel;

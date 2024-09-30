@@ -29,11 +29,11 @@ export const createOrUpdateFeedback = async (req, res) => {
         }
 
         // Check if the user is the creator of the recipe
-        if (String(recipe.creator) === String(req.user.id)) {
+        if (String(recipe.creator) === String(req.user.userId)) {
             return res.status(403).send({ status: false, message: constant.feedback.ownRecipeFeedbackError });
         }
 
-        const existingRecipeFeedback = await recipeFeedbackModel.findOne({ recipeId: body.recipeId, userId: req.user.id });
+        const existingRecipeFeedback = await recipeFeedbackModel.findOne({ recipeId: body.recipeId, userId: req.user.userId });
 
         if (!req.headers.update) {
             if (existingRecipeFeedback) {
@@ -46,7 +46,8 @@ export const createOrUpdateFeedback = async (req, res) => {
             // Create the Feedback directly with UserId included
             const result = await recipeFeedbackModel.create({
                 ...body,
-                userId: req.user.id
+                userId: req.user.userId,
+                accesstoken: req.accessToken ? req.accessToken : null
             });
 
             return res.status(200).send({ status: true, message: constant.feedback.feedbackAddedSuccess, data: result });
@@ -58,7 +59,7 @@ export const createOrUpdateFeedback = async (req, res) => {
             }
 
             // Update the Feedback directly with UserId included
-            await recipeFeedbackModel.updateOne({ userId: req.user.id, recipeId: body.recipeId }, { ...body });
+            await recipeFeedbackModel.updateOne({ userId: req.user.userId, recipeId: body.recipeId }, { ...body });
 
             return res.status(200).send({ status: true, message: constant.feedback.feedbackUpdatedSuccess });
         }

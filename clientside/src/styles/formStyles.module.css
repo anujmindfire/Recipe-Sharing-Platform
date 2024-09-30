@@ -16,12 +16,12 @@
     font-weight: 700;
     text-align: center;
     line-height: 1;
-    padding: 15px 30px; /* Reduced padding */
-    margin-bottom: 20px; /* Added bottom margin for spacing */
+    padding: 15px 30px;
+    margin-bottom: 20px;
 }
 
 .inputField {
-    width: 100%; /* Make input field take full width */
+    width: 100%;
     max-width: 500px;
     margin-bottom: 20px;
 }
@@ -53,24 +53,24 @@ label {
 @media (max-width: 991px) {
     .formContainer {
         max-width: 90%;
-        padding: 20px; /* Adjust padding for smaller screens */
+        padding: 20px;
     }
 
     .formTitle {
-        font-size: 20px; /* Slightly smaller font size for smaller screens */
+        font-size: 20px;
     }
 
     .inputField {
-        width: 100%; /* Full width */
-        max-width: none; /* Remove max-width on small screens */
+        width: 100%;
+        max-width: none;
     }
 
     label {
-        width: 100%; /* Full width */
-        max-width: none; /* Remove max-width on small screens */
+        width: 100%;
+        max-width: none;
     }
 
     .buttonContainer {
-        width: 100%; /* Full width for button container */
+        width: 100%;
     }
 }

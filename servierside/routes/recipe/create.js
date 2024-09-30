@@ -18,7 +18,7 @@ export const createRecipe = async (req, res) => {
         }
 
         // A user can create one recipe with the same title.
-        const duplicateTitle = await recipeModel.findOne({ creator: req.user.id, title: body.title });
+        const duplicateTitle = await recipeModel.findOne({ creator: req.user.userId, title: body.title });
         if (duplicateTitle) {
             return res.status(400).send({ status: false, message: constant.recipe.duplicateTitleError });
         }
@@ -26,7 +26,8 @@ export const createRecipe = async (req, res) => {
         // Create the recipe directly with creator included
         const result = await recipeModel.create({
             ...body,
-            creator: req.user.id
+            creator: req.user.userId,
+            accesstoken: req.accessToken ? req.accessToken : null
         });
 
         return res.status(200).send({ status: true, message: constant.recipe.recipeCreatedSuccess, data: result });

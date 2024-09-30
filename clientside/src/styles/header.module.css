@@ -6,6 +6,7 @@
     justify-content: space-between;
     flex-wrap: wrap;
     padding: 12px 40px;
+    position: relative;
 }
 
 .logo {
@@ -34,23 +35,11 @@
     font: 700 18px/1 Work Sans, -apple-system, Roboto, Helvetica, sans-serif;
 }
 
-.navigation {
-    display: flex;
-    align-items: center;
-    gap: 32px;
-    font: 14px Work Sans, sans-serif;
-}
-
-.navList {
-    display: flex;
-    list-style-type: none;
-    gap: 36px;
-}
-
-.navList a {
+.navLink {
     color: #121417;
     font-weight: 500;
     text-decoration: none;
+    margin-right: 20px;
 }
 
 .authButtons {
@@ -58,14 +47,76 @@
     gap: 8px;
 }
 
+.profileMenu {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.profileCircle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #000;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-right: 40px;
+}
+
+.dropdownMenu {
+    position: absolute;
+    top: 55px;
+    right: 0;
+    background: white;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    list-style: none;
+    z-index: 1000;
+    border-radius: 4px;
+}
+
+.dropdownItem {
+    display: block;
+    padding: 8px 12px;
+    color: #121417;
+    text-decoration: none;
+}
+
+.dropdownItem:hover {
+    background-color: #f5f5f5;
+}
+
+.logoutContainer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.logoutButton {
+    background: none;
+    border: none;
+    color: #121417;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    gap: 8px;
+    padding: 8px 12px; 
+    white-space: nowrap;
+}
+
+.logoutButton:hover {
+    background-color: #f5f5f5;
+}
+
 @media (max-width: 991px) {
     .header {
         max-width: 100%;
         padding: 0 20px;
-    }
-
-    .navigation {
-        max-width: 100%;
     }
 
     .logoText,
