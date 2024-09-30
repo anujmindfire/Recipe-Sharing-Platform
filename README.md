@@ -6,10 +6,6 @@ The Recipe Sharing Application is a platform that allows users to share, discove
 ## Table of Contents
 - [Installation](#installation)
 - [Usage](#usage)
-- [Contributing](#contributing)
-- [License](#license)
-- [Changelog](#changelog)
-- [Acknowledgments](#acknowledgments)
 
 ## Installation
 To run the application locally, follow these steps:
@@ -38,7 +34,7 @@ REGION='ap-south-1'
 
 npm start
 
-Usage
+## Usage
 Once the application is running, you can access it at http://localhost:5301. You will be able to:
 
 1. Search for recipes
@@ -69,7 +65,6 @@ This command will start the development server and usually open your default web
 5. Check API Integration: Ensure your backend server (API) is running as well, so that the frontend can communicate with it. Follow the instructions in the previous README.md for starting the backend if necessary.
 
 project folder looks like this:
-
 
 /recipesharing
     /clientside
