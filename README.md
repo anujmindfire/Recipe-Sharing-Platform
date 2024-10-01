@@ -8,66 +8,59 @@ The Recipe Sharing Application is a platform that allows users to share, discove
 - [Usage](#usage)
 
 ## Installation
-To run the application locally, follow these steps:
+
+### Backend Setup
 
 1. **Clone the repository:**
    ```bash
-   https://github.com/anujmindfire/Recipe-Sharing-Platform.git
+   git clone https://github.com/anujmindfire/Recipe-Sharing-Platform.git
    cd Recipe-Sharing-Platform
+   
+2. **Install backend dependencies: Navigate to the serverside folder and install the necessary dependencies:**
+   ```bash
+   cd serverside
+   npm install
 
-2. Install dependencies: Make sure you have Node.js and npm installed. Then, run:
+3. **Set up environment variables: Create a .env file in the root directory with the following content:**
+   ```bash
+   MONGOURL='mongodb+srv://anuj:pmujU1WPJ8QXLrwh@demodatabase.qqtcuhe.mongodb.net/recipesharing'
+   PORT=5301
+   SUPERSECRET='recipesharing'
+   REFRESHSECRET='recipesharingrefreshtoken!!!!!'
 
-npm install
+   # AWS SERVER IMAGE 
+   BUCKET='dhwani-staging'
+   ACCESSKEY='AKIAZO4LYB4X5MGM32PD'
+   SECRETACCESSKEY='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'
+   REGION='ap-south-1'
+4. **Start the backend server: Run the following command in the serverside folder:**
+   ```bash
+   npm start
 
-3. Set up environment variables: Create a .env file in the root directory with the following contents:
+### Frontend Setup
 
-MONGOURL='mongodb+srv://anuj:pmujU1WPJ8QXLrwh@demodatabase.qqtcuhe.mongodb.net/recipesharing'
-PORT=5301
-SUPERSECRET='recipesharing'
-REFRESHSECRET='recipesharingrefreshtoken!!!!!'
+1. **Navigate to the frontend directory:**
+   ```bash
+   cd clientside
 
-# AWS SERVER IMAGE 
-BUCKET='dhwani-staging'
-ACCESSKEY='AKIAZO4LYB4X5MGM32PD'
-SECRETACCESSKEY='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'
-REGION='ap-south-1'
+2. **Install frontend dependencies:**
+   ```bash
+   npm install
+   
+3. **Start the frontend application:**
+   ```bash
+   npm start
 
-npm start
+The frontend should now be accessible at http://localhost:3000.
 
 ## Usage
-Once the application is running, you can access it at http://localhost:5301. You will be able to:
+Once both the backend and frontend servers are running, you can:
 
-1. Search for recipes
-2. Apply filters based on ratings, preparation time, and cooking time
-3. View and share your own recipes
+Search for recipes.
+Apply filters based on ratings, preparation time, and cooking time.
+View and share your own recipes.
+Ensure that the backend server (API) is running and properly connected to the frontend for full functionality.
+   
 
-Frontend Setup and Start Instructions
 
-1. Ensure Node.js and npm are Installed: Make sure you have Node.js and npm (Node Package Manager) installed on your machine. You can check if they are installed by running the following commands in your terminal:
 
-node -v
-npm -v
-
-2. Navigate to the Frontend Directory: If your frontend code is in a separate directory (like clientside), navigate to that directory. For example:
-
-cd clientside
-
-3. Install Dependencies: If you haven’t installed the frontend dependencies yet, run the following command:
-
-npm install
-
-4. Start the Frontend Application: To start the frontend application, run:
-
-npm start
-
-This command will start the development server and usually open your default web browser to http://localhost:3000.
-
-5. Check API Integration: Ensure your backend server (API) is running as well, so that the frontend can communicate with it. Follow the instructions in the previous README.md for starting the backend if necessary.
-
-project folder looks like this:
-
-/recipesharing
-    /clientside
-    /serverside
-     -- .env
-    README.md
