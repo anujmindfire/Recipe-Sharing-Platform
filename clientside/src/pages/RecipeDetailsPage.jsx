@@ -33,6 +33,9 @@ const RecipeDetailsPage = () => {
 
                 const data = await response.json();
                 if (response.ok) {
+                    if (data.accesstoken) {
+                        localStorage.setItem('accesstoken', data.accesstoken);
+                    }
                     setRecipe(data.data);
                 } else {
                     setError('Failed to fetch recipe details.');

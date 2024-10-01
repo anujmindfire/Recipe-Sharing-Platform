@@ -40,7 +40,6 @@ const CreateRecipeModal = ({ onClose }) => {
                     body: formData,
                 });
 
-                console.log('response', response);
                 const result = await response.json();
 
                 if (response.ok) {
@@ -99,6 +98,9 @@ const CreateRecipeModal = ({ onClose }) => {
                 const result = await response.json();
 
                 if (response.ok) {
+                    if (result.accesstoken) {
+                        localStorage.setItem('accesstoken', result.accesstoken);
+                    }
                     alert(result.message);
                     onClose();
                 } else {

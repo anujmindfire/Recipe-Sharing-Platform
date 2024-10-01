@@ -38,6 +38,9 @@ const RecipePage = () => {
 
             const data = await response.json();
             if (response.ok) {
+                if (data.accesstoken) {
+                    localStorage.setItem('accesstoken', data.accesstoken);
+                }
                 setAllRecipes(data.data || []);
                 setRecipes(data.data || []);
                 setTotalPages(Math.ceil(data.total / 10));
