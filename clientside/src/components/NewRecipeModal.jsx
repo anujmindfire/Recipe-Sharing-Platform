@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styles from '../styles/newRecipeModal.module.css';
 import Button from './Button';
 import { backendURL } from '../api/url';
+import ErrorModal from './ErrorModal';
+import Snackbar from './Snackbar';
+import { Tooltip } from '@chakra-ui/react';
 
 const CreateRecipeModal = ({ onClose }) => {
     const [title, setTitle] = useState('');
@@ -11,8 +14,20 @@ const CreateRecipeModal = ({ onClose }) => {
     const [imageUrl, setImageUrl] = useState('');
     const [preparationTime, setPreparationTime] = useState('');
     const [cookingTime, setCookingTime] = useState('');
-    const [errors, setErrors] = useState({});
+    const [showErrorModal, setShowErrorModal] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [snackbarVisible, setSnackbarVisible] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+
+    // Focus states
+    const [isTitleFocused, setIsTitleFocused] = useState(false);
+    const [isIngredientsFocused, setIsIngredientsFocused] = useState(false);
+    const [isStepsFocused, setIsStepsFocused] = useState(false);
+    const [isImageFocused, setIsImageFocused] = useState(false);
+    const [isPreparationTimeFocused, setIsPreparationTimeFocused] = useState(false);
+    const [isCookingTimeFocused, setIsCookingTimeFocused] = useState(false);
+
     const accesstoken = localStorage.getItem('accesstoken');
     const refreshtoken = localStorage.getItem('refreshtoken');
     const userId = localStorage.getItem('id');
@@ -40,224 +55,242 @@ const CreateRecipeModal = ({ onClose }) => {
                     body: formData,
                 });
 
-                const result = await response.json();
+                const data = await response.json();
 
                 if (response.ok) {
-                    setImageUrl(result.imageUrl);
+                    setImageUrl(data.imageUrl);
                     setImageUploadStatus('Upload successful');
                 } else {
-                    alert(`Error getting image URL: ${result.message}`);
+                    setErrorMessage(`Error getting image URL: ${data.message}`);
+                    setShowErrorModal(true);
                     setImageUploadStatus('Select recipe image to upload');
                 }
             } catch (error) {
-                alert('Something went wrong');
+                setErrorMessage('Something went wrong');
+                setShowErrorModal(true);
                 setImageUploadStatus('Select recipe image to upload');
             }
         }
     };
 
-    const validateFields = () => {
-        const newErrors = {};
-        if (!title) newErrors.title = 'Title is required.';
-        if (!ingredients) newErrors.ingredients = 'Ingredients are required.';
-        if (!steps) newErrors.steps = 'Steps are required.';
-        if (!imageUrl) newErrors.image = 'Image is required.';
-        if (!preparationTime) newErrors.preparationTime = 'Preparation time is required.';
-        if (!cookingTime) newErrors.cookingTime = 'Cooking time is required.';
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
     const handleCreateRecipe = async (e) => {
         e.preventDefault();
-        if (validateFields()) {
-            const recipeData = {
-                title,
-                ingredients: ingredients.split(',').map(item => item.trim()),
-                steps: steps.split(',').map(item => item.trim()),
-                imageUrl,
-                preparationTime,
-                cookingTime,
-                description,
-            };
+        const recipeData = {
+            title,
+            ingredients: ingredients.split(',').map(item => item.trim()),
+            steps: steps.split(',').map(item => item.trim()),
+            imageUrl,
+            preparationTime,
+            cookingTime,
+            description,
+        };
 
-            setIsSubmitting(true);
+        setIsSubmitting(true);
 
-            try {
-                const response = await fetch(`${backendURL}/recipe`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'accesstoken': accesstoken,
-                        'refreshtoken': refreshtoken,
-                        'id': userId,
-                    },
-                    body: JSON.stringify(recipeData),
-                });
+        try {
+            const response = await fetch(`${backendURL}/recipe`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'accesstoken': accesstoken,
+                    'refreshtoken': refreshtoken,
+                    'id': userId,
+                },
+                body: JSON.stringify(recipeData),
+            });
 
-                const result = await response.json();
+            const data = await response.json();
 
-                if (response.ok) {
-                    if (result.accesstoken) {
-                        localStorage.setItem('accesstoken', result.accesstoken);
-                    }
-                    alert(result.message);
+            if (response.ok) {
+                setSnackbarMessage(data.message);
+                setSnackbarVisible(true);
+                setTimeout(() => {
                     onClose();
-                } else {
-                    alert(result.message);
-                }
-            } catch (error) {
-                alert('Something went wrong');
-            } finally {
-                setIsSubmitting(false);
+                }, 3000);
+            } else if (data.message) {
+                setErrorMessage(data.message);
+                setShowErrorModal(true);
             }
+        } catch (error) {
+            setErrorMessage('Something went wrong');
+            setShowErrorModal(true);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
-    useEffect(() => {
-    }, [title, ingredients, steps, description, imageUrl, preparationTime, cookingTime, errors, isSubmitting]);
+    const isFormValid = title && ingredients && steps && imageUrl && preparationTime && cookingTime;
 
     return (
         <div className={styles.modalBackdrop} onClick={onClose}>
             <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-                <h2 className={styles.modalTitle}>Create Recipe</h2>
-                <hr className={styles.divider} />
+                <div>
+                    <h2 className={styles.modalTitle}>Create Recipe</h2>
+                    <hr className={styles.divider} />
+                </div>
                 <form className={styles.recipeForm} onSubmit={handleCreateRecipe}>
                     <div className={styles.formContainer}>
-                        <div className={styles.formContent}>
-                            <div className={styles.formFields}>
-                                {/* Title Input Field */}
-                                <div className={styles.inputWrapper}>
-                                    <div className={styles.inputField}>
-                                        <label className={styles['visually-hidden']} htmlFor="recipe-title">Enter recipe title</label>
+                        <div className={styles.formFields}>
+                            {/* Title Input Field */}
+                            <div className={styles.inputWrapper}>
+                                <div className={styles.inputField}>
+                                    <label className={styles['visually-hidden']} htmlFor='recipe-title'>Enter recipe title</label>
+                                    <Tooltip label="Field is required" isOpen={isTitleFocused && !title}>
                                         <input
-                                            type="text"
-                                            id="recipe-title"
+                                            type='text'
+                                            id='recipe-title'
                                             className={styles.textInput}
-                                            placeholder="Enter recipe title"
+                                            placeholder='Enter recipe title'
                                             value={title}
                                             onChange={(e) => setTitle(e.target.value)}
-                                            aria-label="Recipe title"
+                                            onFocus={() => setIsTitleFocused(true)}
+                                            onBlur={() => {
+                                                setIsTitleFocused(false);
+                                            }}
+                                            aria-label='Recipe title'
                                         />
-                                        {errors.title && <p>{errors.title}</p>}
-                                    </div>
+                                    </Tooltip>
                                 </div>
+                            </div>
 
-                                {/* Ingredients Input Field */}
-                                <div className={styles.inputWrapper}>
-                                    <div className={styles.inputField}>
-                                        <label className={styles['visually-hidden']} htmlFor="recipe-ingredients">List ingredients</label>
+                            {/* Ingredients Input Field */}
+                            <div className={styles.inputWrapper}>
+                                <div className={styles.inputField}>
+                                    <label className={styles['visually-hidden']} htmlFor='recipe-ingredients'>List ingredients</label>
+                                    <Tooltip label="Field is required" isOpen={isIngredientsFocused && !ingredients}>
                                         <textarea
-                                            id="recipe-ingredients"
+                                            id='recipe-ingredients'
                                             className={styles.textareaInput}
-                                            placeholder="List ingredients (comma separated)"
+                                            placeholder='List ingredients (comma separated)'
                                             value={ingredients}
                                             onChange={(e) => setIngredients(e.target.value)}
-                                            aria-label="Recipe ingredients"
+                                            onFocus={() => setIsIngredientsFocused(true)}
+                                            onBlur={() => setIsIngredientsFocused(false)}
+                                            aria-label='Recipe ingredients'
                                         />
-                                        {errors.ingredients && <p >{errors.ingredients}</p>}
-                                    </div>
+                                    </Tooltip>
                                 </div>
+                            </div>
 
-                                {/* Steps Input Field */}
-                                <div className={styles.inputWrapper}>
-                                    <div className={styles.inputField}>
-                                        <label className={styles['visually-hidden']} htmlFor="recipe-steps">Describe the steps</label>
+                            {/* Steps Input Field */}
+                            <div className={styles.inputWrapper}>
+                                <div className={styles.inputField}>
+                                    <label className={styles['visually-hidden']} htmlFor='recipe-steps'>Describe the steps</label>
+                                    <Tooltip label="Field is required" isOpen={isStepsFocused && !steps}>
                                         <textarea
-                                            id="recipe-steps"
+                                            id='recipe-steps'
                                             className={styles.textareaInput}
-                                            placeholder="Describe the steps (comma separated)"
+                                            placeholder='Describe the steps (comma separated)'
                                             value={steps}
                                             onChange={(e) => setSteps(e.target.value)}
-                                            aria-label="Recipe steps"
+                                            onFocus={() => setIsStepsFocused(true)}
+                                            onBlur={() => setIsStepsFocused(false)}
+                                            aria-label='Recipe steps'
                                         />
-                                        {errors.steps && <p>{errors.steps}</p>}
-                                    </div>
+                                    </Tooltip>
                                 </div>
+                            </div>
 
-                                {/* Description Input Field */}
-                                <div className={styles.inputWrapper}>
-                                    <div className={styles.inputField}>
-                                        <label className={styles['visually-hidden']} htmlFor="recipe-description">Enter recipe description</label>
-                                        <textarea
-                                            id="recipe-description"
-                                            className={styles.textareaInput}
-                                            placeholder="Enter recipe description"
-                                            value={description}
-                                            onChange={(e) => setDescription(e.target.value)}
-                                            aria-label="Recipe description"
-                                        />
-                                        {errors.description && <p>{errors.description}</p>}
-                                    </div>
+                            {/* Description Input Field */}
+                            <div className={styles.inputWrapper}>
+                                <div className={styles.inputField}>
+                                    <label className={styles['visually-hidden']} htmlFor='recipe-description'>Enter recipe description</label>
+                                    <textarea
+                                        id='recipe-description'
+                                        className={styles.textareaInput}
+                                        placeholder='Enter recipe description'
+                                        value={description}
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        aria-label='Recipe description'
+                                    />
                                 </div>
+                            </div>
 
-                                {/* Image Upload Field */}
-                                <div className={styles.inputWrapper}>
-                                    <div className={styles.inputField}>
-                                        <div className={styles.imageUploadWrapper}>
-                                            <label htmlFor="recipe-image" className={styles.imageUploadText}>{imageUploadStatus}</label>
-                                            <div className={styles.imageUploadButton}>
-                                                <input
-                                                    id="recipe-image"
-                                                    type="file"
-                                                    accept="image/*"
-                                                    onChange={handleImageChange}
-                                                    aria-label="Upload recipe image"
-                                                />
-                                            </div>
+                            {/* Image Upload Field */}
+                            <div className={styles.inputWrapper}>
+                                <div className={styles.inputField}>
+                                    <div className={styles.imageUploadWrapper}>
+                                        <label htmlFor='recipe-image' className={styles.imageUploadText}>{imageUploadStatus}</label>
+                                        <div className={styles.imageUploadButton}>
+                                            <input
+                                                id='recipe-image'
+                                                type='file'
+                                                accept='image/*'
+                                                onChange={handleImageChange}
+                                                onFocus={() => setIsImageFocused(true)}
+                                                onBlur={() => setIsImageFocused(false)}
+                                                aria-label='Upload recipe image'
+                                            />
                                         </div>
-                                        {errors.image && <p>{errors.image}</p>}
                                     </div>
+                                    <Tooltip label="Field is required" isOpen={isImageFocused && !imageUrl}>
+                                        <span className={styles['visually-hidden']}>{'Field is required'}</span>
+                                    </Tooltip>
                                 </div>
+                            </div>
 
-                                {/* Preparation Time Input Field */}
-                                <div className={styles.inputWrapper}>
-                                    <div className={styles.inputField}>
-                                        <label className={styles['visually-hidden']} htmlFor="recipe-preparation-time">Preparation time</label>
+                            {/* Preparation Time Input Field */}
+                            <div className={styles.inputWrapper}>
+                                <div className={styles.inputField}>
+                                    <label className={styles['visually-hidden']} htmlFor='recipe-preparation-time'>Preparation time</label>
+                                    <Tooltip label="Field is required" isOpen={isPreparationTimeFocused && !preparationTime}>
                                         <input
-                                            type="text"
-                                            id="recipe-preparation-time"
+                                            type='text'
+                                            id='recipe-preparation-time'
                                             className={styles.textInput}
-                                            placeholder="Preparation time (e.g., 30 minutes)"
+                                            placeholder='Preparation time (e.g., 30 minutes)'
                                             value={preparationTime}
                                             onChange={(e) => setPreparationTime(e.target.value)}
-                                            aria-label="Preparation time"
+                                            onFocus={() => setIsPreparationTimeFocused(true)}
+                                            onBlur={() => setIsPreparationTimeFocused(false)}
+                                            aria-label='Recipe preparation time'
                                         />
-                                        {errors.preparationTime && <p>{errors.preparationTime}</p>}
-                                    </div>
+                                    </Tooltip>
                                 </div>
+                            </div>
 
-                                {/* Cooking Time Input Field */}
-                                <div className={styles.inputWrapper}>
-                                    <div className={styles.inputField}>
-                                        <label className={styles['visually-hidden']} htmlFor="recipe-cooking-time">Cooking time</label>
+                            {/* Cooking Time Input Field */}
+                            <div className={styles.inputWrapper}>
+                                <div className={styles.inputField}>
+                                    <label className={styles['visually-hidden']} htmlFor='recipe-cooking-time'>Cooking time</label>
+                                    <Tooltip label="Field is required" isOpen={isCookingTimeFocused && !cookingTime}>
                                         <input
-                                            type="text"
-                                            id="recipe-cooking-time"
+                                            type='text'
+                                            id='recipe-cooking-time'
                                             className={styles.textInput}
-                                            placeholder="Cooking time (e.g., 45 minutes)"
+                                            placeholder='Cooking time (e.g., 45 minutes)'
                                             value={cookingTime}
                                             onChange={(e) => setCookingTime(e.target.value)}
-                                            aria-label="Cooking time"
+                                            onFocus={() => setIsCookingTimeFocused(true)}
+                                            onBlur={() => setIsCookingTimeFocused(false)}
+                                            aria-label='Recipe cooking time'
                                         />
-                                        {errors.cookingTime && <p>{errors.cookingTime}</p>}
-                                    </div>
+                                    </Tooltip>
                                 </div>
                             </div>
                         </div>
 
-                        <div className={styles.buttonContainer}>
-                            <div className={styles.buttonFlex}>
-                                <Button type="submit" variant="primary" disabled={isSubmitting}>
-                                    {isSubmitting ? 'Creating...' : 'CREATE'}
-                                </Button>
-                                <Button type="button" variant="secondary" onClick={onClose}>
-                                    Cancel
-                                </Button>
-                            </div>
+                        {/* Submit Button */}
+                        <div className={styles.submitButton}>
+                            <Button
+                                type='submit'
+                                disabled={isSubmitting || !isFormValid} // Disable button if form is not valid or is submitting
+                            >
+                                {isSubmitting ? 'Creating...' : 'Create Recipe'}
+                            </Button>
                         </div>
                     </div>
                 </form>
+                <ErrorModal
+                    isOpen={showErrorModal}
+                    message={errorMessage}
+                    onClose={() => setShowErrorModal(false)}
+                />
+                <Snackbar
+                    isVisible={snackbarVisible}
+                    message={snackbarMessage}
+                    onClose={() => setSnackbarVisible(false)}
+                />
             </div>
         </div>
     );

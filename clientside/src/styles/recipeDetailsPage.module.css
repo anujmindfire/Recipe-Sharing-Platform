@@ -13,15 +13,18 @@
     max-width: 960px;
     margin: 0 auto;
     width: 100%;
+    margin-top: 10px;
 }
 
 .recipeHeader {
     color: #fff;
     font: 700 28px/1 'Plus Jakarta Sans', -apple-system, Roboto, Helvetica, sans-serif;
+    margin: 50px 0px;
 }
 
 .recipeImageContainer {
     padding: 16px;
+    margin-bottom: 20px;
 }
 
 .recipeFullImage {
@@ -31,12 +34,39 @@
     object-fit: cover;
 }
 
+.titleContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: -30px;
+    padding: 0 20px;
+    position: relative;
+}
+
 .recipeTitle {
     min-height: 60px;
-    width: 100%;
     color: rgba(28, 23, 13, 1);
-    padding: 20px 16px 12px;
-    font: 700 22px/1 Plus Jakarta Sans, -apple-system, Roboto, Helvetica, sans-serif;
+    padding: 20px 0px 12px;
+    font: 700 22px/1 'Plus Jakarta Sans', -apple-system, Roboto, Helvetica, sans-serif;
+}
+
+.iconContainer {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    position: absolute;
+    right: 20px;
+    top: 0;
+    color: black;
+}
+
+.heartIcon {
+    cursor: pointer;
+    margin-right: 8px;
+}
+
+.liked {
+    color: #e0245e;
 }
 
 .recipeDescription {
@@ -188,7 +218,6 @@
     align-items: center;
     font-size: 18px;
     font-weight: bold;
-    cursor: pointer;
     margin-right: 10px;
 }
 
@@ -245,40 +274,32 @@
     display: flex;
     justify-content: flex-end;
     margin-bottom: 10px;
-    font-size: 0.875rem; 
+}
+
+.loaderContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
 }
 
 .feedbackTextBox {
     resize: none;
     padding: 10px;
     margin: 10px 0;
-    border: 1px solid #ccc; 
+    border: 1px solid #ccc;
     border-radius: 4px;
-    font-size: 14px;
 }
 
-@media (max-width: 991px) {
-    .header {
-        padding: 12px 20px;
-    }
 
+@media (max-width: 991px) {
     .recipeContent {
         padding: 20px;
     }
 
-    .recipeImage {
-        padding-top: 100px;
-    }
-
     .recipeTitle {
         display: block;
-        color: #1c170d;
-        font: 700 22px/1 'Plus Jakarta Sans', -apple-system, Roboto, Helvetica, sans-serif;
         padding: 20px 16px 12px;
-    }
-
-    .recipeTitleMobile {
-        display: none;
     }
 
     .ratingDistribution {

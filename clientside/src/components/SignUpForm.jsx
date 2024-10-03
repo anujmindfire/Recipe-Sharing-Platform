@@ -4,7 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import DOMPurify from 'dompurify';
 import styles from '../styles/formStyles.module.css';
 import InputField from './InputField';
+import Loader from './Loader';
 import Button from './Button';
+import ErrorModal from './ErrorModal';
+import Snackbar from './Snackbar';
 import { backendURL } from '../api/url';
 
 const initialState = { name: '', email: '', password: '', confirmPassword: '' };
@@ -16,6 +19,11 @@ const SignUpForm = () => {
     const [confirmPasswordError, setConfirmPasswordError] = useState('');
     const [showPasswordHelp, setShowPasswordHelp] = useState(false);
     const [showEmailHelp, setShowEmailHelp] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
+    const [showModal, setShowModal] = useState(false);
+    const [showSnackbar, setShowSnackbar] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -42,7 +50,7 @@ const SignUpForm = () => {
         }
 
         if (name === 'password') {
-            const isPasswordValid = /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,50}$/.test(sanitizedValue);
+            const isPasswordValid = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z0-9!@#$%^&*]{8,50}$/.test(sanitizedValue);
             setShowPasswordHelp(!isPasswordValid);
         }
 
@@ -54,13 +62,16 @@ const SignUpForm = () => {
     const validateForm = useCallback(() => {
         const { name, email, password, confirmPassword } = formData;
         return name.length >= 2 && name.length <= 50 && /^[A-Za-z\s]+$/.test(name) &&
-               /^[0-9a-zA-Z._%+-]+@gmail\.com$/.test(email) &&
-               /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,50}$/.test(password) &&
-               password === confirmPassword;
+            /^[0-9a-zA-Z._%+-]+@gmail\.com$/.test(email) &&
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z0-9!@#$%^&*]{8,50}$/.test(password) &&
+            password === confirmPassword;
     }, [formData]);
 
     const onSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
+        setIsDisabled(true);
+
         try {
             const response = await fetch(`${backendURL}/user`, {
                 method: 'POST',
@@ -70,22 +81,29 @@ const SignUpForm = () => {
 
             const data = await response.json();
             if (response.ok) {
-                alert('Signup successful. Please Sign in.');
-                navigate('/signin');
+                setSuccessMessage(data.message);
+                setShowSnackbar(true);
+                setTimeout(() => {
+                    navigate('/signin');
+                }, 1000);
             } else if (data.message) {
-                alert(data.message);
+                setErrorMessage(data.message);
+                setShowModal(true);
             }
-        } catch {
-            alert('Something went wrong');
+        } catch (error) {
+            setErrorMessage('Unable to connect to the server. Please check your internet connection.');
+            setShowModal(true);
         }
+        setLoading(false);
+        setIsDisabled(false);
     };
 
     useEffect(() => {
         const accessToken = localStorage.getItem('accesstoken');
         const refreshToken = localStorage.getItem('refreshtoken');
         if (accessToken && refreshToken) {
-            alert('You are already a loggedIn user, if you are trying to access the sign page, please log out first.');
-            navigate('recipes');
+            alert('You are already logged in. Please log out to access the signup page.');
+            navigate('/recipes');
         }
     }, [navigate]);
 
@@ -96,63 +114,86 @@ const SignUpForm = () => {
     const { name, email, password, confirmPassword } = formData;
 
     return (
-        <form className={styles.formContainer} onSubmit={onSubmit}>
-            <h2 className={styles.formTitle}>Sign Up</h2>
-            <Tooltip hasArrow label={nameError} isOpen={!!nameError} placement='top'>
-                <InputField
-                    className={styles.inputField}
-                    label='Name'
-                    name='name'
-                    type='text'
-                    value={name}
-                    onChange={handleChange}
-                    onBlur={() => setNameError('')}
+        <>
+            <form className={styles.formContainer} onSubmit={onSubmit}>
+                <h2 className={styles.formTitle}>Sign Up</h2>
+                <Tooltip hasArrow label={nameError} isOpen={!!nameError} placement='top'>
+                    <InputField
+                        className={styles.inputField}
+                        label='Name'
+                        name='name'
+                        type='text'
+                        value={name}
+                        onChange={handleChange}
+                        onBlur={() => setNameError('')}
+                    />
+                </Tooltip>
+                <Tooltip hasArrow label={showEmailHelp ? 'Only gmail.com mail is accepted' : ''} isOpen={showEmailHelp} placement='top'>
+                    <InputField
+                        className={styles.inputField}
+                        label='Email'
+                        name='email'
+                        type='email'
+                        value={email}
+                        onChange={handleChange}
+                        onBlur={() => setShowEmailHelp(false)}
+                    />
+                </Tooltip>
+                <Tooltip hasArrow label={showPasswordHelp ? 'Password must be 8-50 characters long consisting of at least one number, uppercase letter, lowercase letter, and special character' : ''} isOpen={showPasswordHelp} placement='top'>
+                    <InputField
+                        className={styles.inputField}
+                        label='Password'
+                        name='password'
+                        type='password'
+                        value={password}
+                        onChange={handleChange}
+                        onBlur={() => setShowPasswordHelp(false)}
+                    />
+                </Tooltip>
+                <Tooltip hasArrow label={confirmPasswordError} isOpen={!!confirmPasswordError} placement='top'>
+                    <InputField
+                        className={styles.inputField}
+                        label='Confirm Password'
+                        name='confirmPassword'
+                        type='password'
+                        value={confirmPassword}
+                        onChange={handleChange}
+                        onBlur={() => setConfirmPasswordError('')}
+                    />
+                </Tooltip>
+                <p className={styles.prompt}>
+                    Already have an account? <a href='/signin'>Sign in</a>
+                </p>
+
+                <div className={styles.buttonContainer}>
+                    <Button w='300px' type='submit' disabled={isDisabled || loading}>
+                        Sign up
+                    </Button>
+                </div>
+
+                {loading && (
+                    <div className={styles.loaderContainer}>
+                        <Loader />
+                    </div>
+                )}
+            </form>
+
+            {showModal && (
+                <ErrorModal
+                    message={errorMessage}
+                    onClose={() => {
+                        setShowModal(false);
+                        setErrorMessage('');
+                    }}
                 />
-            </Tooltip>
-            <Tooltip hasArrow label={showEmailHelp ? 'Only gmail.com mail is accepted' : ''} isOpen={showEmailHelp} placement='top'>
-                <InputField
-                    className={styles.inputField}
-                    label='Email'
-                    name='email'
-                    type='email'
-                    value={email}
-                    onChange={handleChange}
-                    onBlur={() => setShowEmailHelp(false)}
-                />
-            </Tooltip>
-            <Tooltip hasArrow label={showPasswordHelp ? 'Password must be 8-50 characters long consisting of at least one number, uppercase letter, lowercase letter, and special character' : ''} isOpen={showPasswordHelp} placement='top'>
-                <InputField
-                    className={styles.inputField}
-                    label='Password'
-                    name='password'
-                    type='password'
-                    value={password}
-                    onChange={handleChange}
-                    onBlur={() => setShowPasswordHelp(false)}
-                />
-            </Tooltip>
-            <Tooltip hasArrow label={confirmPasswordError} isOpen={!!confirmPasswordError} placement='top'>
-                <InputField
-                    className={styles.inputField}
-                    label='Confirm Password'
-                    name='confirmPassword'
-                    type='password'
-                    value={confirmPassword}
-                    onChange={handleChange}
-                    onBlur={() => setConfirmPasswordError('')}
-                />
-            </Tooltip>
-            <p className={styles.prompt}>
-                Already have an account? <a href="/signin">Sign in</a>
-            </p>
-            
-            <div className={styles.buttonContainer}>
-                <Button w='300px' type='submit' disabled={isDisabled}>
-                    Sign up
-                </Button>
-            </div>
-            
-        </form>
+            )}
+
+            <Snackbar
+                message={successMessage}
+                isVisible={showSnackbar}
+                onClose={() => setShowSnackbar(false)}
+            />
+        </>
     );
 };
 

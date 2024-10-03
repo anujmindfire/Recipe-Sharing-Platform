@@ -1,0 +1,45 @@
+.loaderContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 20px;
+    background-color: white;
+}
+
+.loaderText {
+    font-size: 0.8vw;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.spinner {
+    width: 4vw;
+    height: 4vw;
+    margin-top: -10px;
+}
+
+@media (max-width: 768px) {
+    .loaderText {
+        font-size: 3vw;
+    }
+
+    .spinner {
+        width: 12vw;
+        height: 12vw;
+        margin-top: -8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .loaderText {
+        font-size: 4vw;
+    }
+
+    .spinner {
+        width: 18vw;
+        height: 18vw;
+        margin-top: -8px;
+    }
+}

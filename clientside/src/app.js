@@ -15,7 +15,7 @@ function App() {
         <Route path='/signin' element={<SignInPage />} />
         {/* <Route path='/profile' element={<ProfilePage />} /> */}
         <Route path='/recipes' element={<RecipePage />} />
-        <Route exact path="/recipe/:id" element={<RecipeDetailsPage />} />
+        <Route exact path='/recipe/:id' element={<RecipeDetailsPage />} />
         <Route path='/*' element={<Navigate to='/signin' />} />
       </Routes>
     </Box>

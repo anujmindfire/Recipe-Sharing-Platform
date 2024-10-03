@@ -34,7 +34,7 @@ export const getRecipe = async (req, res) => {
 
                 return res.status(200).send({ status: true, message: constant.general.fetchData, data: responseData, accesstoken: req.accessToken ? req.accessToken : null });
             } catch (error) {
-                return res.status(500).json({ status: false, message: 'Internal Server Error' });
+                return res.status(400).send({ status: false, message: constant.general.genericError });
             }
         }
 
@@ -42,7 +42,7 @@ export const getRecipe = async (req, res) => {
         const data = await recipeModel.find(conditions)
             .skip(skip)
             .limit(limit)
-            .sort({ id: 1 });
+            .sort({ title: 1 });
 
         return res.status(200).send({
             timestamp: moment().unix(),

@@ -6,13 +6,14 @@
     justify-content: space-between;
     flex-wrap: wrap;
     padding: 12px 40px;
-    position: relative;
+    position: fixed;
+    background-color: white;
+    z-index: 1000;
 }
 
 .logo {
     display: flex;
     align-items: center;
-    gap: 16px;
 }
 
 .logoLink {
@@ -111,6 +112,14 @@
 
 .logoutButton:hover {
     background-color: #f5f5f5;
+}
+
+.loaderContainer {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 999;
 }
 
 @media (max-width: 991px) {

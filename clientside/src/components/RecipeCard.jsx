@@ -14,12 +14,17 @@ const RecipeCard = ({ recipes }) => {
             {recipes.map((recipe) => (
                 <article 
                     key={recipe._id} 
-                    className={styles.recipeCard} 
+                    className={styles.cardContainer} 
                     onClick={() => handleCardClick(recipe._id)}
                 >
-                    <img src={recipe.imageUrl} alt={recipe.title} className={styles.recipeImage} />
-                    <div className={styles.recipeInfo}>
-                        <h2 className={styles.recipeTitle}>{recipe.title}</h2>
+                    <div
+                        className={styles.imageContainer}
+                        style={{
+                            backgroundImage: `url(${recipe.imageUrl})`,
+                        }}
+                    ></div>
+                    <div className={styles.textContainer}>
+                        <h2 className={styles.title}>{recipe.title}</h2>
                     </div>
                 </article>
             ))}

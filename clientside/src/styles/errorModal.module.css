@@ -1,0 +1,31 @@
+.errorModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.errorContent {
+    background-color: #f2f2f2;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 3px;
+    max-width: 90%;
+    width: 400px;
+}
+
+.errorContent h1 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.errorContent p {
+    font-size: 16px;
+    margin-bottom: 20px;
+}

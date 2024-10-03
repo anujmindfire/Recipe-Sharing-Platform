@@ -105,7 +105,7 @@ const globalFilter = async (req) => {
             // Find recipes with the specified rating
             const recipesWithRating = await recipeFeedbackModel.aggregate([
                 { $match: { ratingValue: ratingValue } },
-                { $group: { _id: "$recipeId" } }
+                { $group: { _id: '$recipeId' } }
             ]);
 
             const recipeIds = recipesWithRating.map(feedback => feedback._id);

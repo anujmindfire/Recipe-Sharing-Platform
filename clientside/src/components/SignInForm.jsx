@@ -5,6 +5,9 @@ import DOMPurify from 'dompurify';
 import styles from '../styles/formStyles.module.css';
 import InputField from './InputField';
 import Button from './Button';
+import Loader from './Loader';
+import Snackbar from './Snackbar';
+import ErrorModal from './ErrorModal';
 import { backendURL } from '../api/url';
 
 const initialState = { email: '', password: '' };
@@ -14,6 +17,11 @@ const SignInForm = () => {
     const [isDisabled, setIsDisabled] = useState(true);
     const [showEmailHelp, setShowEmailHelp] = useState(false);
     const [showPasswordHelp, setShowPasswordHelp] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
+    const [showModal, setShowModal] = useState(false);
+    const [showSnackbar, setShowSnackbar] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -27,7 +35,7 @@ const SignInForm = () => {
         }
 
         if (name === 'password') {
-            const isPasswordValid = /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,50}$/.test(sanitizedValue);
+            const isPasswordValid = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z0-9!@#$%^&*]{8,50}$/.test(sanitizedValue);
             setShowPasswordHelp(!isPasswordValid);
         }
     };
@@ -35,11 +43,14 @@ const SignInForm = () => {
     const validateForm = useCallback(() => {
         const { email, password } = formData;
         return /^[0-9a-zA-Z._%+-]+@gmail\.com$/.test(email) &&
-            /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,50}$/.test(password);
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z0-9!@#$%^&*]{8,50}$/.test(password);
     }, [formData]);
 
     const onSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
+        setIsDisabled(true);
+
         try {
             const response = await fetch(`${backendURL}/auth/signin`, {
                 method: 'POST',
@@ -53,21 +64,28 @@ const SignInForm = () => {
                 localStorage.setItem('refreshtoken', data.refreshToken);
                 localStorage.setItem('id', data.data.userId);
                 localStorage.setItem('name', data.data.name);
-                alert('Login successful');
-                navigate('/recipes');
+
+                setSuccessMessage(data.message);
+                setShowSnackbar(true);
+                setTimeout(() => {
+                    navigate('/recipes');
+                }, 1000);
             } else if (data.message) {
-                alert(data.message);
+                setErrorMessage(data.message);
+                setShowModal(true);
             }
-        } catch (err) {
-            alert('Something went wrong');
+        } catch (error) {
+            setErrorMessage('Unable to connect to the server. Please check your internet connection.');
+            setShowModal(true);
         }
+        setLoading(false);
+        setIsDisabled(false);
     };
 
     useEffect(() => {
         const accessToken = localStorage.getItem('accesstoken');
         const refreshToken = localStorage.getItem('refreshtoken');
         if (accessToken && refreshToken) {
-            alert('You are already a loggedIn user, if you are trying to access the sign page, please log out first.');
             navigate('/recipes');
         }
     }, [navigate]);
@@ -79,39 +97,63 @@ const SignInForm = () => {
     const { email, password } = formData;
 
     return (
-        <form className={styles.formContainer} onSubmit={onSubmit}>
-            <h2 className={styles.formTitle}>Sign in</h2>
-            <Tooltip hasArrow label={showEmailHelp ? 'Only gmail.com mail is accepted' : ''} isOpen={showEmailHelp} placement='top'>
-                <InputField
-                    className={styles.inputField}
-                    label='Email'
-                    name='email'
-                    type='email'
-                    value={email}
-                    onChange={handleChange}
-                    onBlur={() => setShowEmailHelp(false)}
+        <>
+            <form className={styles.formContainer} onSubmit={onSubmit}>
+                <h2 className={styles.formTitle}>Sign in</h2>
+                <Tooltip hasArrow label={showEmailHelp ? 'Only gmail.com mail is accepted' : ''} isOpen={showEmailHelp} placement='top'>
+                    <InputField
+                        className={styles.inputField}
+                        label='Email'
+                        name='email'
+                        type='email'
+                        value={email}
+                        onChange={handleChange}
+                        onBlur={() => setShowEmailHelp(false)}
+                    />
+                </Tooltip>
+                <Tooltip hasArrow label={showPasswordHelp ? 'Password must be 8-50 characters long consisting of at least one number, uppercase letter, lowercase letter, and special character' : ''} isOpen={showPasswordHelp} placement='top'>
+                    <InputField
+                        className={styles.inputField}
+                        label='Password'
+                        name='password'
+                        type='password'
+                        value={password}
+                        onChange={handleChange}
+                        onBlur={() => setShowPasswordHelp(false)}
+                    />
+                </Tooltip>
+                <p className={styles.prompt}>
+                    Don't have an account? <a href='/signup'>Sign up</a>
+                </p>
+                <div className={styles.buttonContainer}>
+                    <Button w='300px' type='submit' disabled={isDisabled || loading}>
+                        {loading ? 'Signing In...' : 'Sign In'}
+                    </Button>
+                </div>
+
+                {loading && (
+                    <div className={styles.loaderContainer}>
+                        <Loader />
+                    </div>
+                )}
+            </form>
+
+            {showModal && (
+                <ErrorModal
+                    message={errorMessage}
+                    onClose={() => {
+                        setShowModal(false);
+                        setErrorMessage('');
+                    }}
                 />
-            </Tooltip>
-            <Tooltip hasArrow label={showPasswordHelp ? 'Password must be 8-50 characters long consisting of at least one number, uppercase letter, lowercase letter, and special character' : ''} isOpen={showPasswordHelp} placement='top'>
-                <InputField
-                    className={styles.inputField}
-                    label='Password'
-                    name='password'
-                    type='password'
-                    value={password}
-                    onChange={handleChange}
-                    onBlur={() => setShowPasswordHelp(false)}
-                />
-            </Tooltip>
-            <p className={styles.prompt}>
-                Don't have an account? <a href="/signup">Sign up</a>
-            </p>
-            <div className={styles.buttonContainer}>
-                <Button w='300px' type='submit' disabled={isDisabled}>
-                    Sign In
-                </Button>
-            </div>
-        </form>
+            )}
+
+            <Snackbar
+                message={successMessage}
+                isVisible={showSnackbar}
+                onClose={() => setShowSnackbar(false)}
+            />
+        </>
     );
 };
 
