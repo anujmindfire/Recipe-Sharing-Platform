@@ -1,1 +1,1 @@
-export const backendURL = 'https://recipe-sharing-platform-tan.vercel.app/';
+export const backendURL = 'https://recipe-sharing-platform-zeta.vercel.app/api';
