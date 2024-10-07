@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket.IO Test</title>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+</head>
+
+<body>
+    <h1>Socket.IO Connection Test</h1>
+    <div>
+        <label for="userId">User ID:</label>
+        <input type="text" id="userId" placeholder="Enter your user ID">
+    </div>
+    <div>
+        <label for="followId">Follow User ID:</label>
+        <input type="text" id="followId" placeholder="Enter ID to follow">
+        <button id="followButton">Follow</button>
+    </div>
+    <div id="notifications"></div>
+
+    <script>
+        const socket = io('http://localhost:5301');
+
+        socket.on('connect', () => {
+            console.log('Connected to Socket.IO server with ID:', socket.id);
+            const userId = document.getElementById('userId').value; // Ensure this is correctly set
+            if (userId) {
+                socket.emit('join', userId); // Join the room with userId
+                console.log(`User with ID: ${userId} joined the room`);
+            }
+        });
+
+        // Listen for notifications
+        socket.on('notification', (data) => {
+            console.log('Received notification:', data);
+            const notificationsDiv = document.getElementById('notifications');
+            notificationsDiv.innerHTML += `<p>${data.message}</p>`;
+        });
+
+        // Follow user button click event
+        document.getElementById('followButton').addEventListener('click', () => {
+            const followerId = document.getElementById('userId').value;
+            const followedId = document.getElementById('followId').value;
+
+            if (followerId && followedId) {
+                fetch('http://localhost:5301/api/follow', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ followerId, followedId })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.message) {
+                            console.log(data.message); // Log follow success message
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            } else {
+                alert('Please enter both User IDs.');
+            }
+        });
+
+        // Optionally join the room when the userId input loses focus (if desired)
+        document.getElementById('userId').addEventListener('blur', () => {
+            const userId = document.getElementById('userId').value;
+            if (userId) {
+                socket.emit('join', userId);
+                console.log(`User with ID: ${userId} joined the room`);
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -8,7 +8,7 @@ const withAuthentication = (Component) => {
 
     useEffect(() => {
       if (!token) {
-        navigate('/login');
+        navigate('/signin');
       }
     }, [token, navigate]);
     

@@ -6,11 +6,12 @@ import { faHeart as heartRegular } from '@fortawesome/free-regular-svg-icons';
 import { faHeart as heartSolid } from '@fortawesome/free-solid-svg-icons';
 import { faShareNodes as solidShare, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { backendURL } from '../api/url';
-import Header from '../components/Header';
 import Button from '../components/Button';
 import Snackbar from '../components/Snackbar';
 import ErrorModal from '../components/ErrorModal';
 import Loader from '../components/Loader';
+import withAuthentication from '../utils/withAuthenicate';
+import { refreshAccessToken } from '../utils/tokenServices';
 
 const RecipeDetailsPage = () => {
     const { id } = useParams();
@@ -24,6 +25,7 @@ const RecipeDetailsPage = () => {
     const [showModal, setShowModal] = useState(false);
     const [showSnackbar, setShowSnackbar] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
+    const [notFound, setNotFound] = useState(false);
 
     const accesstoken = localStorage.getItem('accesstoken');
     const refreshtoken = localStorage.getItem('refreshtoken');
@@ -32,14 +34,13 @@ const RecipeDetailsPage = () => {
     useEffect(() => {
         const fetchRecipeDetails = async () => {
             setIsLoading(true);
-
+            setNotFound(false);
             try {
                 const response = await fetch(`${backendURL}/recipe?_id=${id}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
                         accesstoken,
-                        refreshtoken,
                         id: userId,
                     },
                 });
@@ -47,19 +48,27 @@ const RecipeDetailsPage = () => {
                 const data = await response.json();
                 if (response.ok) {
                     setRecipe(data.data);
-                } else if (data.message) {
+                    setIsLiked(data.data.isSaved);
+                } else if (response.status === 401 || data.unauthorized) {
+                    const newAccessToken = await refreshAccessToken(refreshtoken, userId, navigate);
+                    if (newAccessToken) {
+                        await fetchRecipeDetails();
+                    }
+                } else if (data.message && response.status !== 401) {
+                    setNotFound(true);
                     setError(data.message);
                     setShowModal(true);
                 }
-            } catch {
+            } catch (error) {
                 setError('Unable to connect to the server. Please check your internet connection.');
                 setShowModal(true);
+            } finally {
+                setIsLoading(false);
             }
-            setIsLoading(false);
         };
 
         fetchRecipeDetails();
-    }, [id, accesstoken, refreshtoken, userId]);
+    }, [id, accesstoken, refreshtoken, userId, navigate]);
 
     const isDisabled = feedbackRating === 0 || feedbackComment.trim() === '';
 
@@ -72,7 +81,6 @@ const RecipeDetailsPage = () => {
                 headers: {
                     'Content-Type': 'application/json',
                     accesstoken,
-                    refreshtoken,
                     id: userId,
                 },
                 body: JSON.stringify({ recipeId: id, ratingValue: feedbackRating, commentText: feedbackComment }),
@@ -96,50 +104,61 @@ const RecipeDetailsPage = () => {
         }
     };
 
-    const handleShareRecipe = () => {
-        if (navigator.share) {
-            navigator.share({
-                title: recipe?.title,
-                url: window.location.href,
-            })
+    const handleShareRecipe = (platform) => {
+        const url = window.location.href;
+        const message = `Check out this recipe: ${recipe?.title} - ${url}`;
+    
+        if (platform === 'whatsapp') {
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
+        } else if (platform === 'facebook') {
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
+        } else if (navigator.share) {
+            navigator.share({ title: recipe?.title, url })
+        } else {
+            setError('Sharing is not supported on this device/browser. You can copy the link instead.');
+            setShowModal(true);
+            navigator.clipboard.writeText(url).then(() => {
+                setSuccessMessage('URL copied to clipboard');
+                setShowSnackbar(true);
+            });
         }
     };
 
-    const toggleLike = () => {
-        setIsLiked((prev) => !prev);
-        setSuccessMessage(isLiked ? 'Removed from favorites.' : 'Added to favorites.');
-        setShowSnackbar(true);
+    const toggleLike = async () => {
+        setIsLoading(true);
+        try {
+            const response = await fetch(`${backendURL}/user?recipeId=${id}&add=${!isLiked}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    accesstoken,
+                    id: userId,
+                },
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setIsLiked((prev) => !prev);
+                setSuccessMessage(data.message);
+                setShowSnackbar(true);
+            } else {
+                setError(data.message);
+                setShowModal(true);
+            }
+        } catch {
+            setError('Something went wrong while processing your request.');
+            setShowModal(true);
+        } finally {
+            setIsLoading(false);
+        }
     };
-
-    if (isLoading) return (
-        <div className={styles.loaderContainer}>
-            <Loader />
-        </div>
-    );
-
-    if (showModal) {
-        return (
-            <ErrorModal
-                message={error}
-                onClose={() => {
-                    setShowModal(false);
-                    setError('');
-                }}
-            />
-        );
-    }
-
-    if (!recipe) return <p>Recipe not found</p>;
-
-    const { title, description, imageUrl, preparationTime, cookingTime, ingredients, steps } = recipe.recipe;
-    const ratingPercentages = recipe.ratingPercentages;
-    const feedbackData = recipe.feedbackData || [];
 
     return (
         <main className={styles.recipeReview}>
             {recipe && (
                 <>
-                    <Header />
+                    {/* <Header /> */}
                     <article className={styles.recipeContent}>
                         <section className={styles.recipeHeader}>
                             <FontAwesomeIcon
@@ -148,11 +167,11 @@ const RecipeDetailsPage = () => {
                                 style={{ cursor: 'pointer', color: 'black', marginLeft: '20px' }}
                             />
                             <figure className={styles.recipeImageContainer}>
-                                <img src={imageUrl} alt={title} className={styles.recipeFullImage} />
+                                <img src={recipe?.recipe?.imageUrl} alt={recipe?.recipe?.title} className={styles.recipeFullImage} />
                             </figure>
                             <div className={styles.titleContainer}>
                                 <h2 className={styles.recipeTitle}>
-                                    {title}
+                                    {recipe?.recipe?.title}
                                 </h2>
                                 <div className={styles.iconContainer}>
                                     <FontAwesomeIcon
@@ -168,15 +187,15 @@ const RecipeDetailsPage = () => {
                                     />
                                 </div>
                             </div>
-                            <p className={styles.recipeDescription}>{description}</p>
+                            <p className={styles.recipeDescription}>{recipe?.recipe?.description}</p>
                             <div className={styles.recipeMetaInfo}>
                                 <div className={styles.metaItem}>
                                     <h3 className={styles.metaTitle}>Preparation Time</h3>
-                                    <p className={styles.metaValue}>{preparationTime}</p>
+                                    <p className={styles.metaValue}>{recipe?.recipe?.preparationTime}</p>
                                 </div>
                                 <div className={styles.metaItem}>
                                     <h3 className={styles.metaTitle}>Cooking Time</h3>
-                                    <p className={styles.metaValue}>{cookingTime}</p>
+                                    <p className={styles.metaValue}>{recipe?.recipe?.cookingTime}</p>
                                 </div>
                             </div>
                         </section>
@@ -184,7 +203,7 @@ const RecipeDetailsPage = () => {
                         <section className={styles.recipeIngredients}>
                             <h3 className={styles.ingredientsTitle}>Ingredients</h3>
                             <ul className={styles.ingredientsList}>
-                                {ingredients.map((ingredient, index) => (
+                                {recipe?.recipe?.ingredients.map((ingredient, index) => (
                                     <li key={index}>{ingredient}</li>
                                 ))}
                             </ul>
@@ -192,7 +211,7 @@ const RecipeDetailsPage = () => {
 
                         <section className={styles.recipeSteps}>
                             <h3 className={styles.stepsTitle}>Steps</h3>
-                            {steps.map((step, index) => (
+                            {recipe?.recipe?.steps.map((step, index) => (
                                 <div key={index} className={styles.stepItem}>
                                     <h4 className={styles.stepTitle}>Step {index + 1}</h4>
                                     <p className={styles.stepDescription}>{step}</p>
@@ -221,10 +240,10 @@ const RecipeDetailsPage = () => {
                                             <div className={styles.ratingBarContainer}>
                                                 <div
                                                     className={styles.ratingBarFill}
-                                                    style={{ width: `${ratingPercentages[`rating${rating}`]}%` }}
+                                                    style={{ width: `${recipe?.ratingPercentages[`rating${rating}`]}%` }}
                                                 />
                                             </div>
-                                            <span className={styles.ratingPercentage}>{ratingPercentages[`rating${rating}`]}%</span>
+                                            <span className={styles.ratingPercentage}>{recipe?.ratingPercentages[`rating${rating}`]}%</span>
                                         </div>
                                     );
                                 })}
@@ -260,12 +279,12 @@ const RecipeDetailsPage = () => {
                         {/* Reviews Section */}
                         <section className={styles.reviews}>
                             <h3>Reviews</h3>
-                            {feedbackData.length > 0 ? (
-                                feedbackData.map((feedback, index) => (
+                            {recipe?.feedbackData?.length > 0 ? (
+                                recipe?.feedbackData?.map((feedback, index) => (
                                     <article key={index} className={styles.reviewItem}>
                                         <div className={styles.reviewHeader}>
                                             <div className={styles.profileCircle}>
-                                                {feedback.userId.name.charAt(0).toUpperCase()}
+                                                {feedback?.userId?.name.charAt(0).toUpperCase()}
                                             </div>
                                             <div className={styles.reviewerInfo}>
                                                 <h3 className={styles.reviewerName}>{feedback.userId.name}</h3>
@@ -288,15 +307,22 @@ const RecipeDetailsPage = () => {
                         </section>
                     </article>
 
-                    <Snackbar
-                        message={successMessage}
-                        isVisible={showSnackbar}
-                        onClose={() => setShowSnackbar(false)}
-                    />
+                    {(isLoading || notFound) && (
+                        <div>
+                            {isLoading && !notFound && (
+                                <div className={styles.loaderContainer}>
+                                    <Loader />
+                                </div>
+                            )}
+                            {notFound && <p>No recipes found</p>}
+                        </div>
+                    )}
+                    <Snackbar isVisible={showSnackbar} onClose={() => setShowSnackbar(false)} message={successMessage} />
+                    {showModal && <ErrorModal message={error} onClose={() => setShowModal(false)} />}
                 </>
             )}
         </main>
     );
 };
 
-export default RecipeDetailsPage;
+export default withAuthentication(RecipeDetailsPage);

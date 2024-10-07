@@ -1,0 +1,34 @@
+.profilePage {
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.appContainer {
+    background-color: #fff;
+    display: flex;
+    min-height: 800px;
+    width: 100%;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.mainSection {
+    display: flex;
+    width: 100%;
+    justify-content: flex-start;
+    position: relative;
+}
+
+.mainContent {
+    flex-grow: 1; 
+    padding: 16px;
+}
+
+@media (max-width: 991px) {
+    .appContainer,
+    .mainSection {
+        max-width: 100%;
+    }
+}

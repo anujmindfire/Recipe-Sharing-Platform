@@ -8,74 +8,99 @@ import { backendURL } from '../api/url';
 import Snackbar from './Snackbar';
 import ErrorModal from './ErrorModal';
 import Loader from './Loader';
+import FollowNotification from './FollowNotification';
 
 const Header = () => {
     const location = useLocation();
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [showDropdown, setShowDropdown] = useState(false);
-    const [name, setName] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [errorMessage, setErrorMessage] = useState('');
-    const [showModal, setShowModal] = useState(false);
-    const [showSnackbar, setShowSnackbar] = useState(false);
-    const [successMessage, setSuccessMessage] = useState('');
     const navigate = useNavigate();
+
+    const [status, setStatus] = useState({
+        isLoggedIn: false,
+        showDropdown: false,
+        name: '',
+        loading: false,
+        errorMessage: '',
+        showModal: false,
+        showSnackbar: false,
+        successMessage: '',
+    });
+
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    const toggleSidebar = () => {
+        setIsSidebarOpen(!isSidebarOpen);
+    };
 
     useEffect(() => {
         const token = localStorage.getItem('accesstoken');
         const storedName = localStorage.getItem('name');
-        setIsLoggedIn(!!token);
-        setName(storedName);
-    }, []);
+        setStatus((prevState) => ({
+            ...prevState,
+            isLoggedIn: !!token,
+            name: storedName || '',
+        }));
+    }, [location.pathname]);
 
     const handleLogout = async () => {
         const accesstoken = localStorage.getItem('accesstoken');
         const refreshtoken = localStorage.getItem('refreshtoken');
         const userId = localStorage.getItem('id');
 
-        setLoading(true);
+        setStatus((prevState) => ({ ...prevState, loading: true }));
         try {
             const response = await fetch(`${backendURL}/auth/logout`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'accesstoken': accesstoken,
-                    'refreshtoken': refreshtoken,
-                    'id': userId,
+                    accesstoken,
+                    refreshtoken,
+                    id: userId,
                 },
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                setSuccessMessage(data.message);
-                setShowSnackbar(true);
+                setStatus((prevState) => ({
+                    ...prevState,
+                    successMessage: data.message,
+                    showSnackbar: true,
+                    isLoggedIn: false,
+                    name: '',
+                }));
+
                 localStorage.removeItem('accesstoken');
                 localStorage.removeItem('refreshtoken');
                 localStorage.removeItem('id');
                 localStorage.removeItem('name');
 
-                setIsLoggedIn(false);
                 setTimeout(() => {
                     navigate('/signin');
                 }, 1000);
-            } else if (data.message) {
-                setErrorMessage(data.message);
-                setShowModal(true);
+            } else if (data.message && response.status !== 200) {
+                navigate('/signin');
             }
-        } catch (error) {
-            setErrorMessage('Unable to connect to the server. Please check your internet connection.');
-            setShowModal(true);
+        } catch {
+            setStatus((prevState) => ({
+                ...prevState,
+                errorMessage: 'Unable to connect to the server. Please check your internet connection.',
+                showModal: true,
+            }));
+        } finally {
+            setStatus((prevState) => ({ ...prevState, loading: false }));
         }
-        setLoading(false);
     };
 
     const handleLogoClick = () => {
-        if (isLoggedIn) {
-            navigate('/recipes');
-        } else {
-            navigate('/signin');
-        }
+        navigate(status.isLoggedIn ? '/recipes' : '/signin');
+    };
+
+    const toggleDropdown = () => {
+        setStatus((prevState) => ({ ...prevState, showDropdown: !prevState.showDropdown }));
+    };
+
+    const closeDropdown = () => {
+        setStatus((prevState) => ({ ...prevState, showDropdown: false }));
     };
 
     return (
@@ -91,29 +116,48 @@ const Header = () => {
                     <h1 className={styles.logoText}>Foodies</h1>
                 </div>
 
-                {isLoggedIn && (
+                {status.isLoggedIn && (
                     <nav className={styles.navLinks}>
                         <Link to='/recipes' className={styles.navLink}>Recipes</Link>
                     </nav>
                 )}
 
                 <nav className={styles.authButtons}>
-                    {isLoggedIn ? (
+                    {!status.isLoggedIn ? (
+                        (location.pathname === '/signin' || location.pathname === '/signup' || location.pathname === '/otp-verify') && (
+                            <>
+                                <Link to='/signup'>
+                                    <Button variant={location.pathname === '/signup' ? 'primary' : 'secondary'}>
+                                        Sign up
+                                    </Button>
+                                </Link>
+                                <Link to='/signin'>
+                                    <Button variant={location.pathname === '/signin' ? 'primary' : 'secondary'}>
+                                        Sign in
+                                    </Button>
+                                </Link>
+                            </>
+                        )
+                    ) : (
                         <div className={styles.profileMenu}>
-                            <div
-                                className={styles.profileCircle}
-                                onClick={() => setShowDropdown(!showDropdown)}
-                            >
-                                {name.charAt(0).toUpperCase()}
+                            <button className={styles.iconButton} aria-label="Notifications" onClick={toggleSidebar}>
+                                <img
+                                    src="https://cdn.builder.io/api/v1/image/assets/TEMP/d38291a9b11a8859d48e42f8f0acddefed86e9d4a9f526bdd03b4d73321cd8f7?placeholderIfAbsent=true&apiKey=2ac8b4a54abb47edaafca4375aaa23ca"
+                                    alt="Notifications"
+                                    className={styles.icon}
+                                />
+                            </button>
+                            <div className={styles.profileCircle} onClick={toggleDropdown}>
+                                {status.name.charAt(0).toUpperCase()}
                             </div>
-                            {showDropdown && (
+                            {status.showDropdown && (
                                 <div className={styles.dropdownMenu}>
-                                    <Link to='/profile' className={styles.dropdownItem}>
+                                    <Link to='/profile/recipes' className={styles.dropdownItem} onClick={closeDropdown}>
                                         <FontAwesomeIcon icon={faCircleUser} style={{ marginRight: '10px' }} />
                                         Profile
                                     </Link>
                                     <div className={styles.logoutContainer}>
-                                        <button className={styles.logoutButton} onClick={handleLogout}>
+                                        <button className={styles.logoutButton} onClick={() => { handleLogout(); closeDropdown(); }}>
                                             <FontAwesomeIcon icon={faRightFromBracket} />
                                             <span>Logout</span>
                                         </button>
@@ -121,38 +165,26 @@ const Header = () => {
                                 </div>
                             )}
                         </div>
-                    ) : (
-                        <>
-                            <Link to='/signup'>
-                                <Button variant={location.pathname === '/signup' ? 'primary' : 'secondary'}>
-                                    Sign up
-                                </Button>
-                            </Link>
-                            <Link to='/signin'>
-                                <Button variant={location.pathname === '/signin' ? 'primary' : 'secondary'}>
-                                    Sign in
-                                </Button>
-                            </Link>
-                        </>
                     )}
                 </nav>
             </header>
 
-            {loading && <div className={styles.loaderContainer}><Loader /></div>}
+            <FollowNotification isVisible={isSidebarOpen} closeSidebar={toggleSidebar} />
 
-            {showModal && (
+            {status.loading && <div className={styles.loaderContainer}><Loader /></div>}
+
+            {status.showModal && (
                 <ErrorModal
-                    message={errorMessage}
+                    message={status.errorMessage}
                     onClose={() => {
-                        setShowModal(false);
-                        setErrorMessage('');
+                        setStatus((prevState) => ({ ...prevState, showModal: false, errorMessage: '' }));
                     }}
                 />
             )}
             <Snackbar
-                message={successMessage}
-                isVisible={showSnackbar}
-                onClose={() => setShowSnackbar(false)}
+                message={status.successMessage}
+                isVisible={status.showSnackbar}
+                onClose={() => setStatus((prevState) => ({ ...prevState, showSnackbar: false }))}
             />
         </>
     );

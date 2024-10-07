@@ -2,107 +2,145 @@ import { Tooltip } from '@chakra-ui/react';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DOMPurify from 'dompurify';
-import styles from '../styles/formStyles.module.css';
+import styles from '../styles/form.module.css';
 import InputField from './InputField';
 import Loader from './Loader';
 import Button from './Button';
 import ErrorModal from './ErrorModal';
-import Snackbar from './Snackbar';
 import { backendURL } from '../api/url';
 
-const initialState = { name: '', email: '', password: '', confirmPassword: '' };
+const initialState = {
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    errors: {
+        name: '',
+        confirmPassword: '',
+    },
+    showHelp: {
+        email: false,
+        password: false,
+    },
+    loading: false,
+    errorMessage: '',
+    showModal: false,
+};
 
 const SignUpForm = () => {
     const [formData, setFormData] = useState(initialState);
     const [isDisabled, setIsDisabled] = useState(true);
-    const [nameError, setNameError] = useState('');
-    const [confirmPasswordError, setConfirmPasswordError] = useState('');
-    const [showPasswordHelp, setShowPasswordHelp] = useState(false);
-    const [showEmailHelp, setShowEmailHelp] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [errorMessage, setErrorMessage] = useState('');
-    const [showModal, setShowModal] = useState(false);
-    const [showSnackbar, setShowSnackbar] = useState(false);
-    const [successMessage, setSuccessMessage] = useState('');
     const navigate = useNavigate();
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         const sanitizedValue = DOMPurify.sanitize(value);
-        setFormData({ ...formData, [name]: sanitizedValue });
 
-        if (name === 'name') {
-            const isValidName = /^[A-Za-z\s]+$/.test(sanitizedValue);
-            if (sanitizedValue === '') {
-                setNameError('');
-            } else if (!isValidName) {
-                setNameError('Name can only contain letters and spaces.');
-            } else if (sanitizedValue.length < 2 || sanitizedValue.length > 50) {
-                setNameError('Name should be greater than 2 and less than 50 characters.');
-            } else {
-                setNameError('');
-            }
-        }
+        setFormData((prev) => ({
+            ...prev,
+            [name]: sanitizedValue,
+            errors: {
+                ...prev.errors,
+                [name]: validateField(name, sanitizedValue),
+            },
+        }));
 
         if (name === 'email') {
-            const isEmailValid = /^[0-9a-zA-Z._%+-]+@gmail\.com$/.test(sanitizedValue);
-            setShowEmailHelp(!isEmailValid);
+            setFormData((prev) => ({
+                ...prev,
+                showHelp: {
+                    ...prev.showHelp,
+                    email: !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sanitizedValue),
+                },
+            }));
         }
 
         if (name === 'password') {
-            const isPasswordValid = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z0-9!@#$%^&*]{8,50}$/.test(sanitizedValue);
-            setShowPasswordHelp(!isPasswordValid);
+            setFormData((prev) => ({
+                ...prev,
+                showHelp: {
+                    ...prev.showHelp,
+                    password: !/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z0-9!@#$%^&*]{8,50}$/.test(sanitizedValue),
+                },
+            }));
         }
 
         if (name === 'confirmPassword') {
-            setConfirmPasswordError(sanitizedValue !== formData.password ? 'Passwords do not match.' : '');
+            setFormData((prev) => ({
+                ...prev,
+                errors: {
+                    ...prev.errors,
+                    confirmPassword: sanitizedValue !== formData.password ? 'Passwords do not match.' : '',
+                },
+            }));
+        }
+    };
+
+    const validateField = (name, value) => {
+        switch (name) {
+            case 'name':
+                if (!/^[A-Za-z\s]+$/.test(value)) return 'Name can only contain letters and spaces.';
+                if (value.length < 2 || value.length > 50) return 'Name should be greater than 2 and less than 50 characters.';
+                return '';
+            case 'confirmPassword':
+                return value !== formData.password ? 'Passwords do not match.' : '';
+            default:
+                return '';
         }
     };
 
     const validateForm = useCallback(() => {
         const { name, email, password, confirmPassword } = formData;
-        return name.length >= 2 && name.length <= 50 && /^[A-Za-z\s]+$/.test(name) &&
-            /^[0-9a-zA-Z._%+-]+@gmail\.com$/.test(email) &&
+        return (
+            name.length >= 2 &&
+            name.length <= 50 &&
+            /^[A-Za-z\s]+$/.test(name) &&
+            /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
             /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z0-9!@#$%^&*]{8,50}$/.test(password) &&
-            password === confirmPassword;
+            password === confirmPassword
+        );
     }, [formData]);
 
     const onSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
+        setFormData((prev) => ({ ...prev, loading: true }));
         setIsDisabled(true);
 
         try {
             const response = await fetch(`${backendURL}/user`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({
+                    name: formData.name,
+                    email: formData.email,
+                    password: formData.password,
+                }),
             });
 
             const data = await response.json();
             if (response.ok) {
-                setSuccessMessage(data.message);
-                setShowSnackbar(true);
+                localStorage.setItem('txnId', data.data.txnId);
+                localStorage.setItem('email', true);
                 setTimeout(() => {
-                    navigate('/signin');
+                    navigate('/otp-verify');
                 }, 1000);
             } else if (data.message) {
-                setErrorMessage(data.message);
-                setShowModal(true);
+                setFormData((prev) => ({ ...prev, errorMessage: data.message, showModal: true }));
             }
-        } catch (error) {
-            setErrorMessage('Unable to connect to the server. Please check your internet connection.');
-            setShowModal(true);
+        } catch {
+            setFormData((prev) => ({ ...prev, errorMessage: 'Unable to connect to the server. Please check your internet connection.', showModal: true }));
+        } finally {
+            setFormData((prev) => ({ ...prev, loading: false }));
+            setIsDisabled(false);
         }
-        setLoading(false);
-        setIsDisabled(false);
     };
 
     useEffect(() => {
         const accessToken = localStorage.getItem('accesstoken');
         const refreshToken = localStorage.getItem('refreshtoken');
+        localStorage.removeItem('email');
+        localStorage.removeItem('txnId');
         if (accessToken && refreshToken) {
-            alert('You are already logged in. Please log out to access the signup page.');
             navigate('/recipes');
         }
     }, [navigate]);
@@ -111,13 +149,13 @@ const SignUpForm = () => {
         setIsDisabled(!validateForm());
     }, [formData, validateForm]);
 
-    const { name, email, password, confirmPassword } = formData;
+    const { name, email, password, confirmPassword, errors, showHelp, loading, showModal, errorMessage } = formData;
 
     return (
         <>
             <form className={styles.formContainer} onSubmit={onSubmit}>
                 <h2 className={styles.formTitle}>Sign Up</h2>
-                <Tooltip hasArrow label={nameError} isOpen={!!nameError} placement='top'>
+                <Tooltip hasArrow label={errors.name} isOpen={!!errors.name} placement='top'>
                     <InputField
                         className={styles.inputField}
                         label='Name'
@@ -125,10 +163,10 @@ const SignUpForm = () => {
                         type='text'
                         value={name}
                         onChange={handleChange}
-                        onBlur={() => setNameError('')}
+                        onBlur={() => setFormData((prev) => ({ ...prev, errors: { ...prev.errors, name: validateField('name', name) } }))}
                     />
                 </Tooltip>
-                <Tooltip hasArrow label={showEmailHelp ? 'Only gmail.com mail is accepted' : ''} isOpen={showEmailHelp} placement='top'>
+                <Tooltip hasArrow label={showHelp.email ? 'Please Enter Valid Email' : ''} isOpen={showHelp.email} placement='top'>
                     <InputField
                         className={styles.inputField}
                         label='Email'
@@ -136,10 +174,10 @@ const SignUpForm = () => {
                         type='email'
                         value={email}
                         onChange={handleChange}
-                        onBlur={() => setShowEmailHelp(false)}
+                        onBlur={() => setFormData((prev) => ({ ...prev, showHelp: { ...prev.showHelp, email: false } }))}
                     />
                 </Tooltip>
-                <Tooltip hasArrow label={showPasswordHelp ? 'Password must be 8-50 characters long consisting of at least one number, uppercase letter, lowercase letter, and special character' : ''} isOpen={showPasswordHelp} placement='top'>
+                <Tooltip hasArrow label={showHelp.password ? 'Password must be 8-50 characters long consisting of at least one number, uppercase letter, lowercase letter, and special character' : ''} isOpen={showHelp.password} placement='top'>
                     <InputField
                         className={styles.inputField}
                         label='Password'
@@ -147,10 +185,10 @@ const SignUpForm = () => {
                         type='password'
                         value={password}
                         onChange={handleChange}
-                        onBlur={() => setShowPasswordHelp(false)}
+                        onBlur={() => setFormData((prev) => ({ ...prev, showHelp: { ...prev.showHelp, password: false } }))}
                     />
                 </Tooltip>
-                <Tooltip hasArrow label={confirmPasswordError} isOpen={!!confirmPasswordError} placement='top'>
+                <Tooltip hasArrow label={errors.confirmPassword} isOpen={!!errors.confirmPassword} placement='top'>
                     <InputField
                         className={styles.inputField}
                         label='Confirm Password'
@@ -158,7 +196,7 @@ const SignUpForm = () => {
                         type='password'
                         value={confirmPassword}
                         onChange={handleChange}
-                        onBlur={() => setConfirmPasswordError('')}
+                        onBlur={() => setFormData((prev) => ({ ...prev, errors: { ...prev.errors, confirmPassword: validateField('confirmPassword', confirmPassword) } }))}
                     />
                 </Tooltip>
                 <p className={styles.prompt}>
@@ -171,28 +209,17 @@ const SignUpForm = () => {
                     </Button>
                 </div>
 
-                {loading && (
-                    <div className={styles.loaderContainer}>
-                        <Loader />
-                    </div>
-                )}
+                {loading && <Loader />}
             </form>
 
             {showModal && (
                 <ErrorModal
                     message={errorMessage}
                     onClose={() => {
-                        setShowModal(false);
-                        setErrorMessage('');
+                        setFormData((prev) => ({ ...prev, showModal: false, errorMessage: '' }));
                     }}
                 />
             )}
-
-            <Snackbar
-                message={successMessage}
-                isVisible={showSnackbar}
-                onClose={() => setShowSnackbar(false)}
-            />
         </>
     );
 };

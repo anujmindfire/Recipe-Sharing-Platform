@@ -274,7 +274,7 @@ const CreateRecipeModal = ({ onClose }) => {
                         <div className={styles.submitButton}>
                             <Button
                                 type='submit'
-                                disabled={isSubmitting || !isFormValid} // Disable button if form is not valid or is submitting
+                                disabled={isSubmitting || !isFormValid}
                             >
                                 {isSubmitting ? 'Creating...' : 'Create Recipe'}
                             </Button>
