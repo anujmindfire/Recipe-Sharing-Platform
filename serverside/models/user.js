@@ -42,14 +42,6 @@ const userSchema = new mongoose.Schema({
     favouriteRecipe: {
         type: String,
         trim: true
-    },
-    state: {
-        type: String,
-        trim: true,
-    },
-    city: {
-        type: String,
-        trim: true,
     }
 }, { collection: 'user', timestamps: true });
 

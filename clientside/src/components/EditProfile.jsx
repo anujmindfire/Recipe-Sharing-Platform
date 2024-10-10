@@ -19,8 +19,6 @@ const ProfileForm = () => {
         confirmPassword: '',
         bio: '',
         favouriteRecipe: '',
-        state: '',
-        city: '',
         isLoading: false,
         errorMessage: '',
         showErrorModal: false,
@@ -32,13 +30,10 @@ const ProfileForm = () => {
         },
     });
 
-    const [states, setStates] = useState([]);
-    const [cities, setCities] = useState([]);
     const [showSnackbar, setShowSnackbar] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
     const [showNameHelp, setShowNameHelp] = useState(false);
     const [showPasswordHelp, setShowPasswordHelp] = useState(false);
-    const [userStateFetched, setUserStateFetched] = useState(false); 
     const { isLoading, errorMessage, showErrorModal, notFound } = formData;
 
     const accesstoken = localStorage.getItem('accesstoken');
@@ -69,17 +64,14 @@ const ProfileForm = () => {
             const data = await response.json();
 
             if (response.ok) {
-                const { state: userState, name, email, bio, favouriteRecipe, city } = data.data;
+                const { name, email, bio, favouriteRecipe } = data.data;
                 setFormData((prev) => ({
                     ...prev,
                     name,
                     email,
                     bio,
-                    favouriteRecipe,
-                    state: userState,
-                    city,
+                    favouriteRecipe
                 }));
-                setUserStateFetched(true); 
             } else {
                 handleFetchError(data, response);
             }
@@ -90,60 +82,10 @@ const ProfileForm = () => {
         }
     }, [accesstoken, handleFetchError, userId]);
 
-    const fetchStates = useCallback(async () => {
-        setFormData((prev) => ({ ...prev, isLoading: true }));
-        try {
-            const response = await fetch(`${backendURL}/states`);
-            const data = await response.json();
-            if (response.ok) {
-                setStates(data.states);
-                return data.states;
-            }
-        } catch (error) {
-            setFormData((prev) => ({ ...prev, errorMessage: 'Something went wrong.', showErrorModal: true }));
-        } finally {
-            setFormData((prev) => ({ ...prev, isLoading: false }));
-        }
-    }, []);
-
-    const fetchCities = useCallback(async (stateId) => {
-        setFormData((prev) => ({ ...prev, isLoading: true }));
-        try {
-            const response = await fetch(`${backendURL}/city/${stateId}`);
-            const data = await response.json();
-            if (response.ok) {
-                setCities(data.districts);
-            }
-        } catch (error) {
-            setFormData((prev) => ({ ...prev, errorMessage: 'Something went wrong.', showErrorModal: true }));
-        } finally {
-            setFormData((prev) => ({ ...prev, isLoading: false }));
-        }
-    }, []);
-
     useEffect(() => {
-        const loadData = async () => {
-            await fetchStates();
-            await fetchUser();
-        };
+        fetchUser();
+    }, [fetchUser]);
     
-        loadData();
-    }, [fetchUser, fetchStates]);
-    
-    useEffect(() => {
-        const fetchCityData = async () => {
-            if (userStateFetched && states.length > 0) {
-                const userState = formData.state;
-                const selectedState = states.find(state => state.state_name === userState);
-                if (selectedState) {
-                    await fetchCities(selectedState.state_id);
-                }
-            }
-        };
-    
-        fetchCityData();
-    }, [userStateFetched, states, formData.state, fetchCities]);
-
     useEffect(() => {
         document.body.style.overflow = 'hidden';
         return () => {
@@ -165,13 +107,6 @@ const ProfileForm = () => {
             },
             errorMessage: error,
         }));
-
-        if (name === 'state') {
-            const selectedState = states.find(state => state.state_name === sanitizedValue);
-            if (selectedState) {
-                fetchCities(selectedState.state_id);
-            }
-        }
     };
 
     const validateField = (name, value, formData) => {
@@ -320,30 +255,6 @@ const ProfileForm = () => {
                         type='text'
                         value={formData.favouriteRecipe}
                         onChange={handleChange}
-                    />
-
-                    <InputField
-                        label='State'
-                        name='state'
-                        type='select'
-                        value={formData.state}
-                        onChange={handleChange}
-                        options={states.map(state => ({
-                            label: state.state_name,
-                            value: state.state_name,
-                        }))}
-                    />
-
-                    <InputField
-                        label='City'
-                        name='city'
-                        type='select'
-                        value={formData.city}
-                        onChange={handleChange}
-                        options={cities.map(city => ({
-                            label: city.district_name,
-                            value: city.district_name,
-                        }))}
                     />
 
                     <Button w='300px' type='submit' disabled={isLoading}>
