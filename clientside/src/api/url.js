@@ -1,1 +1,1 @@
-export const backendURL = 'https://recipe-sharing-platform-roan.vercel.app/api';
+export const backendURL = 'http://localhost:5301/api';
