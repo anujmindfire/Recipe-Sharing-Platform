@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
     verified: {
         type: Boolean,
         required: true,
-        default: false
+        default: false,
     },
     savedRecipes: [{
         type: mongoose.Schema.Types.ObjectId, 
@@ -35,6 +35,22 @@ const userSchema = new mongoose.Schema({
         ref: 'User',
         unique: true,
     }],
+    bio: {
+        type: String,
+        trim: true,
+    },
+    favouriteRecipe: {
+        type: String,
+        trim: true
+    },
+    state: {
+        type: String,
+        trim: true,
+    },
+    city: {
+        type: String,
+        trim: true,
+    }
 }, { collection: 'user', timestamps: true });
 
 const userModel = mongoose.model('User', userSchema);

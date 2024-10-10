@@ -78,11 +78,8 @@ const RecipePage = () => {
                     allUniqueCookTimes: sortTimes([...new Set([...prevState.allUniqueCookTimes, ...newCookTimes])]),
                     notFound: data.data.length === 0,
                 }));
-            } else if (response.status === 401 || data.unauthorized) {
-                const newAccessToken = await refreshAccessToken(refreshtoken, userId, navigate);
-                if (newAccessToken) {
-                    await fetchRecipes();
-                }
+            } else if ((response.status === 401 || data.unauthorized)) {
+                return await refreshAccessToken(refreshtoken, userId, navigate);
             } else if (data.message && response.status !== 401) {
                 setStatus((prevState) => ({ ...prevState, errorMessage: data.message, showErrorModal: true }));
             }
@@ -127,11 +124,12 @@ const RecipePage = () => {
     return (
         <div className={styles.recipeApp}>
             <main className={styles.mainContent}>
-                <SearchFilterBar 
-                    searchParams={searchParams} 
+                <SearchFilterBar
+                    searchParams={searchParams}
                     handleSearchChange={handleSearchChange}
                     uniquePrepTimes={allUniquePrepTimes}
                     uniqueCookTimes={allUniqueCookTimes}
+                    placeholder='Search Recipes ....'
                 />
 
                 <div className={styles.newRecipeButtonContainer}>
@@ -140,7 +138,7 @@ const RecipePage = () => {
                     </Button>
                 </div>
 
-                {isLoading && !notFound && <Loader className={styles.loaderContainer} />}
+                {isLoading && !notFound && <Loader />}
                 {notFound && <p className={styles.noDataMessage}>No recipes found</p>}
                 <RecipeCard recipes={recipes} />
                 {isModalOpen && <NewRecipeModal onClose={handleCloseModal} />}

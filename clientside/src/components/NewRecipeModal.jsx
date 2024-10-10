@@ -5,6 +5,7 @@ import { backendURL } from '../api/url';
 import ErrorModal from './ErrorModal';
 import Snackbar from './Snackbar';
 import { Tooltip } from '@chakra-ui/react';
+import withAuthentication from '../utils/withAuthenicate';
 
 const CreateRecipeModal = ({ onClose }) => {
     const [title, setTitle] = useState('');
@@ -37,7 +38,6 @@ const CreateRecipeModal = ({ onClose }) => {
     const handleImageChange = async (e) => {
         const selectedImage = e.target.files[0];
 
-        // Call /getS3Url API to get the URL
         if (selectedImage) {
             const validImageTypes = ['image/jpeg', 'image/png'];
             if (!validImageTypes.includes(selectedImage.type)) {
@@ -126,6 +126,7 @@ const CreateRecipeModal = ({ onClose }) => {
             <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
                 <div>
                     <h2 className={styles.modalTitle}>Create Recipe</h2>
+                    <button className={styles.closeButton} onClick={onClose}>✖</button> {/* Close Button */}
                     <hr className={styles.divider} />
                 </div>
                 <form className={styles.recipeForm} onSubmit={handleCreateRecipe}>
@@ -135,7 +136,7 @@ const CreateRecipeModal = ({ onClose }) => {
                             <div className={styles.inputWrapper}>
                                 <div className={styles.inputField}>
                                     <label className={styles['visually-hidden']} htmlFor='recipe-title'>Enter recipe title</label>
-                                    <Tooltip label="Field is required" isOpen={isTitleFocused && !title}>
+                                    <Tooltip label='Field is required' isOpen={isTitleFocused && !title}>
                                         <input
                                             type='text'
                                             id='recipe-title'
@@ -157,7 +158,7 @@ const CreateRecipeModal = ({ onClose }) => {
                             <div className={styles.inputWrapper}>
                                 <div className={styles.inputField}>
                                     <label className={styles['visually-hidden']} htmlFor='recipe-ingredients'>List ingredients</label>
-                                    <Tooltip label="Field is required" isOpen={isIngredientsFocused && !ingredients}>
+                                    <Tooltip label='Field is required' isOpen={isIngredientsFocused && !ingredients}>
                                         <textarea
                                             id='recipe-ingredients'
                                             className={styles.textareaInput}
@@ -176,7 +177,7 @@ const CreateRecipeModal = ({ onClose }) => {
                             <div className={styles.inputWrapper}>
                                 <div className={styles.inputField}>
                                     <label className={styles['visually-hidden']} htmlFor='recipe-steps'>Describe the steps</label>
-                                    <Tooltip label="Field is required" isOpen={isStepsFocused && !steps}>
+                                    <Tooltip label='Field is required' isOpen={isStepsFocused && !steps}>
                                         <textarea
                                             id='recipe-steps'
                                             className={styles.textareaInput}
@@ -223,7 +224,7 @@ const CreateRecipeModal = ({ onClose }) => {
                                             />
                                         </div>
                                     </div>
-                                    <Tooltip label="Field is required" isOpen={isImageFocused && !imageUrl}>
+                                    <Tooltip label='Field is required' isOpen={isImageFocused && !imageUrl}>
                                         <span className={styles['visually-hidden']}>{'Field is required'}</span>
                                     </Tooltip>
                                 </div>
@@ -233,17 +234,17 @@ const CreateRecipeModal = ({ onClose }) => {
                             <div className={styles.inputWrapper}>
                                 <div className={styles.inputField}>
                                     <label className={styles['visually-hidden']} htmlFor='recipe-preparation-time'>Preparation time</label>
-                                    <Tooltip label="Field is required" isOpen={isPreparationTimeFocused && !preparationTime}>
+                                    <Tooltip label='Field is required' isOpen={isPreparationTimeFocused && !preparationTime}>
                                         <input
                                             type='text'
                                             id='recipe-preparation-time'
                                             className={styles.textInput}
-                                            placeholder='Preparation time (e.g., 30 minutes)'
+                                            placeholder='Preparation time (in minutes)'
                                             value={preparationTime}
                                             onChange={(e) => setPreparationTime(e.target.value)}
                                             onFocus={() => setIsPreparationTimeFocused(true)}
                                             onBlur={() => setIsPreparationTimeFocused(false)}
-                                            aria-label='Recipe preparation time'
+                                            aria-label='Preparation time'
                                         />
                                     </Tooltip>
                                 </div>
@@ -253,47 +254,43 @@ const CreateRecipeModal = ({ onClose }) => {
                             <div className={styles.inputWrapper}>
                                 <div className={styles.inputField}>
                                     <label className={styles['visually-hidden']} htmlFor='recipe-cooking-time'>Cooking time</label>
-                                    <Tooltip label="Field is required" isOpen={isCookingTimeFocused && !cookingTime}>
+                                    <Tooltip label='Field is required' isOpen={isCookingTimeFocused && !cookingTime}>
                                         <input
                                             type='text'
                                             id='recipe-cooking-time'
                                             className={styles.textInput}
-                                            placeholder='Cooking time (e.g., 45 minutes)'
+                                            placeholder='Cooking time (in minutes)'
                                             value={cookingTime}
                                             onChange={(e) => setCookingTime(e.target.value)}
                                             onFocus={() => setIsCookingTimeFocused(true)}
                                             onBlur={() => setIsCookingTimeFocused(false)}
-                                            aria-label='Recipe cooking time'
+                                            aria-label='Cooking time'
                                         />
                                     </Tooltip>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Submit Button */}
-                        <div className={styles.submitButton}>
-                            <Button
-                                type='submit'
-                                disabled={isSubmitting || !isFormValid}
-                            >
+                        <div className={styles.buttonContainer}>
+                            <Button type='submit' disabled={!isFormValid || isSubmitting}>
                                 {isSubmitting ? 'Creating...' : 'Create Recipe'}
                             </Button>
                         </div>
                     </div>
                 </form>
-                <ErrorModal
-                    isOpen={showErrorModal}
-                    message={errorMessage}
-                    onClose={() => setShowErrorModal(false)}
-                />
-                <Snackbar
-                    isVisible={snackbarVisible}
-                    message={snackbarMessage}
-                    onClose={() => setSnackbarVisible(false)}
-                />
+
+                {showErrorModal && (
+                    <ErrorModal
+                        message={errorMessage}
+                        onClose={() => setShowErrorModal(false)}
+                    />
+                )}
+                {snackbarVisible && (
+                    <Snackbar message={snackbarMessage} onClose={() => setSnackbarVisible(false)} />
+                )}
             </div>
         </div>
     );
 };
 
-export default CreateRecipeModal;
+export default withAuthentication(CreateRecipeModal);

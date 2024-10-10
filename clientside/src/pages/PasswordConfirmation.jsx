@@ -60,27 +60,27 @@ const PasswordConfirmation = () => {
 
             const data = await response.json();
             if (response.ok) {
-                setStatus({ 
-                    loading: false, 
-                    showSnackbar: true, 
-                    messages: { success: data.message, error: '' } 
+                setStatus({
+                    loading: false,
+                    showSnackbar: true,
+                    messages: { success: data.message, error: '' }
                 });
                 setTimeout(() => navigate('/signin'), 1000);
             } else {
-                setStatus({ 
-                    loading: false, 
-                    showModal: true, 
-                    messages: { success: '', error: data.message } 
+                setStatus({
+                    loading: false,
+                    showModal: true,
+                    messages: { success: '', error: data.message }
                 });
                 if (data.message === 'Link has expired') {
                     setTimeout(() => navigate('/forgot-password'), 1000);
                 }
             }
         } catch (error) {
-            setStatus({ 
-                loading: false, 
-                showModal: true, 
-                messages: { success: '', error: error.message } 
+            setStatus({
+                loading: false,
+                showModal: true,
+                messages: { success: '', error: error.message }
             });
         }
     };
@@ -116,18 +116,17 @@ const PasswordConfirmation = () => {
             <main className={styles.mainContent}>
                 <form className={styles.formContainer} onSubmit={handleSubmit}>
                     <h2 className={styles.formTitle}>Reset Password</h2>
-                    
+
                     <Tooltip
                         hasArrow
                         label={showPasswordHelp ? 'Password must be 8-50 characters long consisting of at least one number, uppercase letter, lowercase letter, and special character' : ''}
                         isOpen={showPasswordHelp}
-                        placement="top"
+                        placement='top'
                     >
                         <InputField
-                            className={styles.inputField}
-                            label="Password"
-                            name="password"
-                            type="password"
+                            label='Password'
+                            name='password'
+                            type='password'
                             value={formData.password}
                             onChange={handleChange}
                             onBlur={() => setShowPasswordHelp(false)}
@@ -138,24 +137,21 @@ const PasswordConfirmation = () => {
                         hasArrow
                         label={confirmPasswordError}
                         isOpen={!!confirmPasswordError}
-                        placement="top"
+                        placement='top'
                     >
                         <InputField
-                            className={styles.inputField}
-                            label="Confirm Password"
-                            name="confirmPassword"
-                            type="password"
+                            label='Confirm Password'
+                            name='confirmPassword'
+                            type='password'
                             value={formData.confirmPassword}
                             onChange={handleChange}
                             onBlur={() => setConfirmPasswordError('')}
                         />
                     </Tooltip>
 
-                    <div className={styles.buttonContainer}>
-                        <Button w="300px" type="submit" disabled={isDisabled || status.loading}>
-                            Reset Password
-                        </Button>
-                    </div>
+                    <Button w='300px' type='submit' disabled={isDisabled || status.loading}>
+                        Reset Password
+                    </Button>
 
                     {status.loading && <Loader />}
                 </form>

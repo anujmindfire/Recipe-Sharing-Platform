@@ -84,6 +84,14 @@ const ForgotPasswordPage = () => {
         localStorage.removeItem('txnId');
     }, [formData.email]);
 
+    useEffect(() => {
+        const accessToken = localStorage.getItem('accesstoken');
+        const refreshToken = localStorage.getItem('refreshtoken');
+        if (accessToken && refreshToken) {
+            navigate('/recipes');
+        }
+    }, [navigate]);
+
     const isFormValid = useCallback(() => validateEmail(formData.email), [formData.email]);
 
     return (
@@ -98,7 +106,6 @@ const ForgotPasswordPage = () => {
                         placement='top'
                     >
                         <InputField
-                            className={styles.inputField}
                             label='Email'
                             name='email'
                             type='email'
@@ -110,11 +117,9 @@ const ForgotPasswordPage = () => {
                     <p className={styles.prompt}>
                         Remembered your password? <a href='/signin'>Sign in</a>
                     </p>
-                    <div className={styles.buttonContainer}>
-                        <Button w='300px' type='submit' disabled={status.loading || !isFormValid()}>
-                            {status.loading ? 'Sending...' : 'Send Reset Link'}
-                        </Button>
-                    </div>
+                    <Button w='300px' type='submit' disabled={status.loading || !isFormValid()}>
+                        {status.loading ? 'Sending...' : 'Send Reset Link'}
+                    </Button>
 
                     {status.loading && <Loader />}
                 </form>

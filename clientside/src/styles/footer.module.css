@@ -4,12 +4,12 @@ html, body {
 }
 
 .footer {
-    position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
     padding: 20px 10px;
     text-align: center;
+    position: relative;
     width: 100%;
     z-index: 1000;
 }
@@ -18,14 +18,6 @@ html, body {
     padding-bottom: 80px;
     min-height: calc(100vh - 60px);
     overflow-y: auto;
-}
-
-@media (max-width: 991px) {
-    .footer {
-        max-width: 100%;
-        padding: 15px 0;
-        margin-bottom: 15px; 
-    }
 }
 
 .navLinks {
@@ -40,68 +32,60 @@ html, body {
     font: 400 16px 'Plus Jakarta Sans', -apple-system, Roboto, Helvetica, sans-serif;
 }
 
-@media (max-width: 991px) {
-    .navLinks {
-        max-width: 100%;
-    }
-}
-
 .navLink {
-    align-self: stretch;
     min-width: 120px;
     white-space: nowrap;
     width: 160px;
-    margin: auto 0;
-}
-
-@media (max-width: 991px) {
-    .navLink {
-        white-space: initial;
-    }
 }
 
 .socialIcons {
     display: flex;
     margin-top: 30px;
     width: 100%;
-    align-items: flex-start;
-    gap: 30px;
+    align-items: center;
+    gap: 20px;
     justify-content: center;
     flex-wrap: wrap;
-}
-
-@media (max-width: 991px) {
-    .socialIcons {
-        max-width: 100%;
-    }
 }
 
 .iconWrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
     width: 32px;
 }
 
 .icon {
     aspect-ratio: 1;
     object-fit: contain;
-    object-position: center;
     width: 100%;
-    flex: 1;
 }
 
 .copyright {
     margin-top: 16px;
-    width: 100%;
     color: rgba(161, 130, 74, 1);
     text-align: center;
     font: 400 16px 'Plus Jakarta Sans', -apple-system, Roboto, Helvetica, sans-serif;
 }
 
 @media (max-width: 991px) {
-    .copyright {
-        max-width: 100%;
+    .navLinks {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .navLink {
+        width: auto;
+        white-space: initial;
+        text-align: center;
+    }
+
+    .socialIcons {
+        gap: 15px;
+    }
+
+    .footer {
+        padding: 15px 0;
     }
 }

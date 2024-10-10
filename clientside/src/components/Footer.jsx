@@ -28,7 +28,7 @@ const Footer = () => {
             <div className={styles.socialIcons}>
                 {socialIcons.map((icon, index) => (
                     <div key={index} className={styles.iconWrapper}>
-                        <img loading="lazy" src={icon.src} alt={icon.alt} className={styles.icon} />
+                        <img loading='lazy' src={icon.src} alt={icon.alt} className={styles.icon} />
                     </div>
                 ))}
             </div>

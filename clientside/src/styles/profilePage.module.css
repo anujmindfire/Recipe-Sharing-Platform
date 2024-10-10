@@ -26,6 +26,22 @@
     padding: 16px;
 }
 
+.scrollContainer {
+    overflow-y: auto;
+    max-height: calc(100vh - 30px);
+    padding: 16px;
+}
+
+.noDataMessage {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50vh; 
+    font-size: 1.5rem;
+    color: #555;
+    text-align: center;
+}
+
 @media (max-width: 991px) {
     .appContainer,
     .mainSection {

@@ -176,10 +176,10 @@ const validateDetails = (body) => {
     if (body.name.length < 2 || body.name.length > 50) {
         return constant.user.validationError.nameLength;
     }
-    if (!isValidMail(body.email)) {
+    if (!isValidMail(body.email) && !body.url.includes('/update')) {
         return constant.user.validationError.invalidEmail;
     }
-    if (!isValidPassword(body.password)) {
+    if (!isValidPassword(body.password) && !body.url.includes('/update')) {
         return constant.user.validationError.invalidPassword;
     }
     return null;

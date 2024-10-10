@@ -15,14 +15,14 @@ export const refreshAccessToken = async (refreshtoken, userId, navigate) => {
 
         if (!response.ok && response.status === 401 && data.logout) {
             clearLocalStorage();
-            navigate('/login');
+            navigate('/signin');
             return null;
         } else if (response.ok && response.status === 200) {
             localStorage.setItem('accesstoken', data.accessToken);
             return data.accessToken;
         } else if (!response.ok && response.status === 401 && data.signout) {
             clearLocalStorage();
-            navigate('/login');
+            navigate('/signin');
             return null;
         }
     } catch (error) {

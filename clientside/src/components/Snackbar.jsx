@@ -6,7 +6,7 @@ const Snackbar = ({ message, isVisible, onClose }) => {
         if (isVisible) {
             const timer = setTimeout(() => {
                 onClose();
-            }, 3000);
+            }, 1000);
             return () => clearTimeout(timer);
         }
     }, [isVisible, onClose]);

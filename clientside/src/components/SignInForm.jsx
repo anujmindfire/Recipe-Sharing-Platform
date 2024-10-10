@@ -6,7 +6,6 @@ import styles from '../styles/form.module.css';
 import InputField from './InputField';
 import Button from './Button';
 import Loader from './Loader';
-import Snackbar from './Snackbar';
 import ErrorModal from './ErrorModal';
 import { backendURL } from '../api/url';
 
@@ -19,8 +18,6 @@ const initialState = {
     loading: false,
     errorMessage: '',
     showModal: false,
-    showSnackbar: false,
-    successMessage: '',
 };
 
 const SignInForm = () => {
@@ -30,13 +27,13 @@ const SignInForm = () => {
     const handleChange = (e) => {
         const { name, value } = e.target;
         const sanitizedValue = DOMPurify.sanitize(value);
-        
+
         setStatus((prev) => ({
             ...prev,
             [name]: sanitizedValue,
             showEmailHelp: name === 'email' ? !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sanitizedValue) : prev.showEmailHelp,
             showPasswordHelp: name === 'password' ? !/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z0-9!@#$%^&*]{8,50}$/.test(sanitizedValue) : prev.showPasswordHelp,
-            isDisabled: !validateForm({ ...prev, [name]: sanitizedValue }), // Validate on change
+            isDisabled: !validateForm({ ...prev, [name]: sanitizedValue }),
         }));
     };
 
@@ -66,13 +63,8 @@ const SignInForm = () => {
 
                 setStatus((prev) => ({
                     ...prev,
-                    successMessage: data.message,
-                    showSnackbar: true,
                 }));
-
-                setTimeout(() => {
-                    navigate('/recipes');
-                }, 1000);
+                navigate('/recipes');
             } else if (data.message) {
                 setStatus((prev) => ({
                     ...prev,
@@ -99,7 +91,7 @@ const SignInForm = () => {
         }
     }, [navigate]);
 
-    const { email, password, loading, showEmailHelp, showPasswordHelp, showModal, errorMessage, showSnackbar, successMessage, isDisabled } = status;
+    const { email, password, loading, showEmailHelp, showPasswordHelp, showModal, errorMessage, isDisabled } = status;
 
     return (
         <>
@@ -107,7 +99,6 @@ const SignInForm = () => {
                 <h2 className={styles.formTitle}>Sign in</h2>
                 <Tooltip hasArrow label={showEmailHelp ? 'Please Enter Valid Email' : ''} isOpen={showEmailHelp} placement='top'>
                     <InputField
-                        className={styles.inputField}
                         label='Email'
                         name='email'
                         type='email'
@@ -118,7 +109,6 @@ const SignInForm = () => {
                 </Tooltip>
                 <Tooltip hasArrow label={showPasswordHelp ? 'Password must be 8-50 characters long consisting of at least one number, uppercase letter, lowercase letter, and special character' : ''} isOpen={showPasswordHelp} placement='top'>
                     <InputField
-                        className={styles.inputField}
                         label='Password'
                         name='password'
                         type='password'
@@ -127,17 +117,18 @@ const SignInForm = () => {
                         onBlur={() => setStatus((prev) => ({ ...prev, showPasswordHelp: false }))}
                     />
                 </Tooltip>
+                
                 <p className={styles.prompt}>
                     Don't have an account? <a href='/signup'>Sign up</a>
                 </p>
+
                 <p className={styles.prompt}>
                     <a href='/forgot-password'>Forgot Password?</a>
                 </p>
-                <div className={styles.buttonContainer}>
-                    <Button w='300px' type='submit' disabled={isDisabled || loading}>
-                        {loading ? 'Signing In...' : 'Sign In'}
-                    </Button>
-                </div>
+
+                <Button w='300px' type='submit' disabled={isDisabled || loading}>
+                    {loading ? 'Signing In...' : 'Sign In'}
+                </Button>
 
                 {loading && <Loader />}
             </form>
@@ -148,12 +139,6 @@ const SignInForm = () => {
                     onClose={() => setStatus((prev) => ({ ...prev, showModal: false, errorMessage: '' }))}
                 />
             )}
-
-            <Snackbar
-                message={successMessage}
-                isVisible={showSnackbar}
-                onClose={() => setStatus((prev) => ({ ...prev, showSnackbar: false }))}
-            />
         </>
     );
 };

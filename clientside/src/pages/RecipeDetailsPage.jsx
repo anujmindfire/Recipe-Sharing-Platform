@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import styles from '../styles/recipeDetailsPage.module.css';
+import styles from '../styles/recipePage.module.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart as heartRegular } from '@fortawesome/free-regular-svg-icons';
 import { faHeart as heartSolid } from '@fortawesome/free-solid-svg-icons';
 import { faShareNodes as solidShare, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { backendURL } from '../api/url';
 import Button from '../components/Button';
-import Snackbar from '../components/Snackbar';
 import ErrorModal from '../components/ErrorModal';
 import Loader from '../components/Loader';
+import ShareModal from '../components/ShareModal';
 import withAuthentication from '../utils/withAuthenicate';
 import { refreshAccessToken } from '../utils/tokenServices';
 
@@ -23,9 +23,8 @@ const RecipeDetailsPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showModal, setShowModal] = useState(false);
-    const [showSnackbar, setShowSnackbar] = useState(false);
-    const [successMessage, setSuccessMessage] = useState('');
     const [notFound, setNotFound] = useState(false);
+    const [shareModalOpen, setShareModalOpen] = useState(false);
 
     const accesstoken = localStorage.getItem('accesstoken');
     const refreshtoken = localStorage.getItem('refreshtoken');
@@ -34,8 +33,9 @@ const RecipeDetailsPage = () => {
     useEffect(() => {
         const fetchRecipeDetails = async () => {
             setIsLoading(true);
-            setNotFound(false);
+
             try {
+                setNotFound(false);
                 const response = await fetch(`${backendURL}/recipe?_id=${id}`, {
                     method: 'GET',
                     headers: {
@@ -50,11 +50,8 @@ const RecipeDetailsPage = () => {
                     setRecipe(data.data);
                     setIsLiked(data.data.isSaved);
                 } else if (response.status === 401 || data.unauthorized) {
-                    const newAccessToken = await refreshAccessToken(refreshtoken, userId, navigate);
-                    if (newAccessToken) {
-                        await fetchRecipeDetails();
-                    }
-                } else if (data.message && response.status !== 401) {
+                    await refreshAccessToken(refreshtoken, userId, navigate);
+                } else {
                     setNotFound(true);
                     setError(data.message);
                     setShowModal(true);
@@ -89,11 +86,7 @@ const RecipeDetailsPage = () => {
             const data = await response.json();
 
             if (response.ok) {
-                setSuccessMessage(data.message);
-                setShowSnackbar(true);
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
+                window.location.reload();
             } else if (data.message) {
                 setError(data.message);
                 setShowModal(true);
@@ -104,24 +97,8 @@ const RecipeDetailsPage = () => {
         }
     };
 
-    const handleShareRecipe = (platform) => {
-        const url = window.location.href;
-        const message = `Check out this recipe: ${recipe?.title} - ${url}`;
-    
-        if (platform === 'whatsapp') {
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
-        } else if (platform === 'facebook') {
-            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
-        } else if (navigator.share) {
-            navigator.share({ title: recipe?.title, url })
-        } else {
-            setError('Sharing is not supported on this device/browser. You can copy the link instead.');
-            setShowModal(true);
-            navigator.clipboard.writeText(url).then(() => {
-                setSuccessMessage('URL copied to clipboard');
-                setShowSnackbar(true);
-            });
-        }
+    const handleShareRecipe = () => {
+        setShareModalOpen(true);
     };
 
     const toggleLike = async () => {
@@ -140,8 +117,6 @@ const RecipeDetailsPage = () => {
 
             if (response.ok) {
                 setIsLiked((prev) => !prev);
-                setSuccessMessage(data.message);
-                setShowSnackbar(true);
             } else {
                 setError(data.message);
                 setShowModal(true);
@@ -156,9 +131,9 @@ const RecipeDetailsPage = () => {
 
     return (
         <main className={styles.recipeReview}>
-            {recipe && (
+            {isLoading && !notFound && <Loader />}
+            {recipe && !isLoading && (
                 <>
-                    {/* <Header /> */}
                     <article className={styles.recipeContent}>
                         <section className={styles.recipeHeader}>
                             <FontAwesomeIcon
@@ -263,16 +238,14 @@ const RecipeDetailsPage = () => {
                                 </div>
                                 <textarea
                                     className={styles.feedbackTextBox}
-                                    placeholder="Write your feedback here..."
+                                    placeholder='Write your feedback here...'
                                     value={feedbackComment}
                                     onChange={(e) => setFeedbackComment(e.target.value)}
                                     required
                                 />
-                                <div className={styles.newFeedbackButtonContainer}>
-                                    <Button w='300px' type='submit' disabled={isDisabled || isLoading || feedbackRating === 0}>
-                                        Submit
-                                    </Button>
-                                </div>
+                                <Button type='submit' disabled={isDisabled || isLoading || feedbackRating === 0}>
+                                    Submit
+                                </Button>
                             </form>
                         </section>
 
@@ -307,17 +280,14 @@ const RecipeDetailsPage = () => {
                         </section>
                     </article>
 
-                    {(isLoading || notFound) && (
-                        <div>
-                            {isLoading && !notFound && (
-                                <div className={styles.loaderContainer}>
-                                    <Loader />
-                                </div>
-                            )}
-                            {notFound && <p>No recipes found</p>}
-                        </div>
-                    )}
-                    <Snackbar isVisible={showSnackbar} onClose={() => setShowSnackbar(false)} message={successMessage} />
+                    <ShareModal
+                        isOpen={shareModalOpen}
+                        onClose={() => setShareModalOpen(false)}
+                        recipeTitle={recipe?.recipe?.title}
+                        recipeLink={window.location.href}
+                    />
+
+                    {notFound && <p className={styles.noDataMessage}>No recipes found</p>}
                     {showModal && <ErrorModal message={error} onClose={() => setShowModal(false)} />}
                 </>
             )}

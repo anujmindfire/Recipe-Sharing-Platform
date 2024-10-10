@@ -14,8 +14,8 @@ import './styles/footer.module.css';
 import ProfilePage from './pages/ProfilePage';
 import MyRecipes from './components/MyRecipes';
 import ProfileList from './components/ProfileList';
-import ShareMessage from './components/ShareMessage';
-// import EditProfile from './components/EditProfile';
+import EditProfile from './components/EditProfile';
+import ChatSidebar from './components/ChatSidebar'
 
 const App = () => {
   return (
@@ -28,9 +28,9 @@ const App = () => {
           <Route path='/profile/favourites' element={<MyRecipes />} />
           <Route path='/profile/following' element={<ProfileList />} />
           <Route path='/profile/follower' element={<ProfileList />} />
-          {/* <Route path='/profile/:userId' element={<EditProfile />} /> */}
+          <Route path='/profile/edit' element={<EditProfile />} />
           <Route path='/profile/list' element={<ProfileList />} />
-          <Route path='/profile/share/message' element={<ShareMessage />} />
+          <Route path='/profile/chat' element={<ChatSidebar />} />
         </Route>
         <Route path='/signup' element={<SignUpPage />} />
         <Route path='/otp-verify' element={<OTPVerification />} />

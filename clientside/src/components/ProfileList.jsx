@@ -1,42 +1,64 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import styles from '../styles/profileList.module.css';
 import Loader from '../components/Loader';
 import ErrorModal from '../components/ErrorModal';
 import Snackbar from '../components/Snackbar';
-import FollowNotification from '../components/FollowNotification';
+import SearchFilterBar from '../components/SearchFilterBar';
 import { backendURL } from '../api/url';
 import { refreshAccessToken } from '../utils/tokenServices';
 import { useNavigate, useLocation } from 'react-router-dom';
 import withAuthentication from '../utils/withAuthenicate';
 import { io } from 'socket.io-client';
+import Notification from './Notification';
 
 const ProfileList = () => {
-    const [profilesData, setProfilesData] = useState({
+    const initialSearchParams = useMemo(() => ({
+        query: '',
+    }), []);
+
+    const [status, setStatus] = useState({
         profiles: [],
+        totalPages: 0,
         page: 1,
-        totalPages: 1,
-        searchQuery: '',
-        notFound: false,
+        isLoading: false,
+        errorMessage: '',
+        showErrorModal: false,
+        searchParams: initialSearchParams,
+        notFound: false
     });
 
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
     const [showSnackbar, setShowSnackbar] = useState(false);
-    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [notifications, setNotifications] = useState([]);
+    const toggleSidebar = () => {
+        setIsSidebarOpen(prev => !prev);
+    };
+
+    const { totalPages, page, isLoading, errorMessage, showErrorModal, searchParams, notFound } = status;
 
     const accesstoken = localStorage.getItem('accesstoken');
     const refreshtoken = localStorage.getItem('refreshtoken');
     const userId = localStorage.getItem('id');
-    const navigate = useNavigate();
+
     const location = useLocation();
+    const navigate = useNavigate();
+    const mainContentRef = useRef(null);
 
     const defaultProfilePicture = 'https://imgv3.fotor.com/images/blog-cover-image/10-profile-picture-ideas-to-make-you-stand-out.jpg';
 
+    const handleFetchError = useCallback((data, response) => {
+        if (response.status === 401 || data.unauthorized) {
+            return refreshAccessToken(refreshtoken, userId, navigate);
+        } else if (data.message) {
+            setStatus((prev) => ({ ...prev, errorMessage: data.message, showErrorModal: true }));
+        }
+    }, [userId, navigate, refreshtoken]);
+
     const fetchProfiles = useCallback(async () => {
+        setStatus((prevState) => ({ ...prevState, isLoading: true, showErrorModal: false }));
+        const { query } = searchParams;
         try {
-            setIsLoading(true);
-            let response;
             const pathMap = {
                 '/profile/list': { allUser: true },
                 '/profile/following': { following: true },
@@ -44,24 +66,23 @@ const ProfileList = () => {
             };
 
             const queryParams = pathMap[location.pathname];
+            if (!queryParams) return;
 
-            if (queryParams) {
-                const url = `${backendURL}/user?${new URLSearchParams({
-                    ...queryParams,
-                    limit: 20,
-                    page: profilesData.page,
-                    searchKey: profilesData.searchQuery,
-                })}`;
+            const url = `${backendURL}/user?${new URLSearchParams({
+                ...queryParams,
+                limit: 20,
+                page: page,
+                searchKey: query,
+            })}`;
 
-                response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        accesstoken,
-                        id: userId,
-                    },
-                });
-            }
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    accesstoken,
+                    id: userId,
+                },
+            });
 
             const data = await response.json();
             if (response.ok && data.data) {
@@ -70,50 +91,79 @@ const ProfileList = () => {
                     profileImage: profile.profileImage || defaultProfilePicture,
                 }));
 
-                const uniqueProfiles = new Map();
-                updatedProfiles.forEach(profile => {
-                    uniqueProfiles.set(profile._id, profile);
-                });
+                const uniqueProfiles = Array.from(new Map(updatedProfiles.map(profile => [profile._id, profile])).values());
 
-                setProfilesData(prevData => ({
+                setStatus(prevData => ({
                     ...prevData,
-                    profiles: Array.from(uniqueProfiles.values()),
+                    profiles: uniqueProfiles,
                     totalPages: Math.ceil(data.total / 20),
-                    notFound: updatedProfiles.length === 0,
+                    notFound: uniqueProfiles.length === 0,
                 }));
-            } else if (response.status === 401 || data.unauthorized) {
-                const newAccessToken = await refreshAccessToken(refreshtoken, userId, navigate);
-                if (newAccessToken) {
-                    await fetchProfiles();
-                }
             } else {
-                setError({ message: data.message });
+                handleFetchError(data, response);
             }
         } catch (error) {
-            setError({ message: error.message });
+            setStatus((prev) => ({ ...prev, errorMessage: 'Something went wrong while fetching profiles.', showErrorModal: true }));
         } finally {
-            setIsLoading(false);
+            setStatus((prev) => ({ ...prev, isLoading: false }));
         }
-    }, [profilesData.page, profilesData.searchQuery, accesstoken, refreshtoken, userId, navigate, location.pathname, defaultProfilePicture]);
+    }, [page, searchParams, accesstoken, userId, handleFetchError, location.pathname, defaultProfilePicture]);
+
+    useEffect(() => {
+        setStatus((prev) => ({
+            ...prev,
+            searchParams: initialSearchParams,
+            page: 1,
+            profiles: [],
+            notFound: false,
+        }));
+        window.scrollTo(0, 0);
+    }, [location.pathname, initialSearchParams]);
 
     useEffect(() => {
         fetchProfiles();
-    }, [profilesData.page, fetchProfiles]);
+    }, [page, searchParams, fetchProfiles]);
 
     useEffect(() => {
-        const socket = io('https://recipe-sharing-platform-zeta.vercel.app');
+        const handleScroll = () => {
+            if (mainContentRef.current) {
+                const bottom = mainContentRef.current.scrollHeight - mainContentRef.current.scrollTop <= mainContentRef.current.clientHeight + 1;
+                if (bottom && !isLoading && page < totalPages) {
+                    setStatus((prev) => ({ ...prev, page: prev.page + 1 }));
+                }
+            }
+        };
+
+        const currentRef = mainContentRef.current;
+
+        if (currentRef) {
+            currentRef.addEventListener('scroll', handleScroll);
+        }
+
+        return () => {
+            if (currentRef) {
+                currentRef.removeEventListener('scroll', handleScroll);
+            }
+        };
+    }, [isLoading, page, totalPages]);
+
+    useEffect(() => {
+        const socket = io('http://localhost:5301');
+
         socket.on('connect', () => {
-            console.log('Connected to Socket.IO server with ID:', socket.id);
             const userId = localStorage.getItem('id');
             if (userId) {
                 socket.emit('join', userId);
-                console.log(`User with ID: ${userId} joined the room`);
             }
         });
 
         socket.on('notification', (data) => {
-            console.log('Received notification:', data);
-            setNotifications(prevNotifications => [...prevNotifications, data.message]);
+            if (data.message) {
+                setNotifications((prevNotifications) => [
+                    ...prevNotifications,
+                    { message: data.message },
+                ]);
+            }
         });
 
         return () => {
@@ -122,30 +172,29 @@ const ProfileList = () => {
     }, []);
 
     const handleSearchChange = (e) => {
-        setProfilesData({
-            ...profilesData,
-            searchQuery: e.target.value,
+        const { name, value } = e.target;
+        setStatus((prevState) => ({
+            ...prevState,
+            searchParams: { ...prevState.searchParams, [name]: value },
             page: 1,
             profiles: [],
-        });
+        }));
     };
 
-    const handleErrorModalClose = () => {
-        setError(null);
-    };
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = 'auto';
+        };
+    }, []);
 
-    const handleSnackbarClose = () => {
-        setShowSnackbar(false);
-    };
-
-    const handleFollowAndUnFollowClick = async (profileId, isFollowing) => {
+    const handleFollowAndUnFollowClick = async (profileId, isFollowing, unfollow) => {
+        setStatus((prevState) => ({ ...prevState, isLoading: true, showErrorModal: false }));
         try {
-            const followAction = isFollowing ? false : true;
-            let unfollowBody = false;
-            if (location.pathname === '/profile/follower') {
-                unfollowBody = true;
-            }
-            let response = await fetch(`${backendURL}/follow`, {
+            const followAction = !isFollowing;
+            const unfollowBody = unfollow ? unfollow : location.pathname === '/profile/follower';
+
+            const response = await fetch(`${backendURL}/follow`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -162,42 +211,49 @@ const ProfileList = () => {
 
             const data = await response.json();
             if (response.ok) {
-                setSnackbarMessage(data.message);
+                setSuccessMessage(data.message);
                 setShowSnackbar(true);
-                setTimeout(() => {
-                    fetchProfiles();
-                }, 1000);
-            } else if (response.status === 401 || data.unauthorized) {
-                const newAccessToken = await refreshAccessToken(refreshtoken, userId, navigate);
-                if (newAccessToken) {
-                    await fetchProfiles();
-                }
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                handleFetchError(data, response);
             }
         } catch (error) {
-            setError({ message: error.message });
+            setStatus((prev) => ({ ...prev, errorMessage: 'Something went wrong while updating follow status.', showErrorModal: true }));
+        } finally {
+            setStatus((prev) => ({ ...prev, isLoading: false }));
         }
     };
 
-    return (
-        <div className={styles.profileList}>
-            <div className={styles.searchFilterContainer}>
-                <div className={styles.searchWrapper}>
-                    <form className={styles.searchBar}>
-                        <input
-                            type='text'
-                            name='query'
-                            className={styles.searchInput}
-                            placeholder='Search users...'
-                            value={profilesData.searchQuery}
-                            onChange={handleSearchChange}
-                        />
-                    </form>
-                </div>
-            </div>
+    const handleErrorModalClose = () => setStatus((prev) => ({ ...prev, showErrorModal: false, errorMessage: '' }));
 
+    return (
+        <div className={`${styles.profileList} ${styles.scrollContainer}`} ref={mainContentRef}>
+            <SearchFilterBar
+                searchParams={searchParams}
+                handleSearchChange={handleSearchChange}
+                uniquePrepTimes={[]}
+                uniqueCookTimes={[]}
+                placeholder='Search Users...'
+            />
+
+            <div className={styles.notificationContainer}>
+                <button
+                    aria-label="Notifications"
+                    onClick={toggleSidebar}
+                >
+                    <img
+                        src="https://cdn.builder.io/api/v1/image/assets/TEMP/d38291a9b11a8859d48e42f8f0acddefed86e9d4a9f526bdd03b4d73321cd8f7?placeholderIfAbsent=true&apiKey=2ac8b4a54abb47edaafca4375aaa23ca"
+                        alt="Notifications"
+                    />
+                </button>
+            </div>
             <section className={styles.profileList}>
-                {profilesData.profiles.length > 0 ? (
-                    profilesData.profiles.map((profile) => (
+                {isLoading ? (
+                    <Loader />
+                ) : notFound ? (
+                    <p className={styles.noDataMessage}>No profiles found</p>
+                ) : status.profiles.length > 0 ? (
+                    status.profiles.map(profile => (
                         <article key={profile._id} className={styles.profileCard}>
                             <div className={styles.profileInfo}>
                                 <img
@@ -206,35 +262,68 @@ const ProfileList = () => {
                                     className={styles.profileImage}
                                 />
                                 <div className={styles.textContainer}>
-                                    <h2 className={styles.profileName}>{profile.name}</h2>
+                                    <h2>{profile.name}</h2>
                                 </div>
                             </div>
-                            <div className={styles.followButtonContainer}>
+                            {location.pathname === '/profile/list' ? (
+                                <>
+                                    {profile.unfollow && profile.followback && !profile.follow && (
+                                        <>
+                                            <button
+                                                className={styles.button}
+                                                onClick={() => handleFollowAndUnFollowClick(profile._id, true, true)}
+                                            >
+                                                <span className={styles.buttonText}>Unfollow</span>
+                                            </button>
+                                            <button
+                                                className={styles.button}
+                                                onClick={() => handleFollowAndUnFollowClick(profile._id, false)}
+                                            >
+                                                <span className={styles.buttonText}>Follow Back</span>
+                                            </button>
+                                        </>
+                                    )}
+
+                                    {profile.unfollow && !profile.followback && !profile.follow && (
+                                        <button
+                                            className={styles.button}
+                                            onClick={() => handleFollowAndUnFollowClick(profile._id, true)}
+                                        >
+                                            <span className={styles.buttonText}>Unfollow</span>
+                                        </button>
+                                    )}
+
+                                    {!profile.unfollow && !profile.followback && profile.follow && (
+                                        <button
+                                            className={styles.button}
+                                            onClick={() => handleFollowAndUnFollowClick(profile._id, false)}
+                                        >
+                                            <span className={styles.buttonText}>Follow</span>
+                                        </button>
+                                    )}
+                                </>
+                            ) : (location.pathname === '/profile/following' || location.pathname === '/profile/follower') && (
                                 <button
                                     className={styles.button}
-                                    onClick={() => handleFollowAndUnFollowClick(profile._id, location.pathname === '/profile/following' || location.pathname === '/profile/follower')}
+                                    onClick={() => handleFollowAndUnFollowClick(profile._id, true)}
                                 >
-                                    <span className={styles.buttonText}>
-                                        {location.pathname === '/profile/following' || location.pathname === '/profile/follower' ? 'Unfollow' : 'Follow'}
-                                    </span>
+                                    <span className={styles.buttonText}>Unfollow</span>
                                 </button>
-                            </div>
+                            )}
+
                         </article>
                     ))
-                ) : profilesData.notFound ? (
-                    <p className={styles.noDataMessage}>No users found</p>
-                ) : null}
-
-                {error && <ErrorModal message={error.message} onClose={handleErrorModalClose} />}
-                {isLoading && !profilesData.notFound && <Loader className={styles.loaderContainer} />}
+                ) : (
+                    <p className={styles.noDataMessage}>No profiles found</p>
+                )}
             </section>
-            {/* <FollowNotification
-                isVisible={showNotificationSidebar}
-                closeSidebar={() => setShowNotificationSidebar(false)}
+            {showErrorModal && <ErrorModal onClose={handleErrorModalClose} message={errorMessage} />}
+            <Snackbar isVisible={showSnackbar} onClose={() => setShowSnackbar(false)} message={successMessage} />
+            <Notification
+                isOpen={isSidebarOpen}
+                onClose={toggleSidebar}
                 notifications={notifications}
-            /> */}
-            <FollowNotification notifications={notifications} /> {/* Render NotificationDisplay */}
-            <Snackbar isVisible={showSnackbar} onClose={handleSnackbarClose} message={snackbarMessage} />
+            />
         </div>
     );
 };

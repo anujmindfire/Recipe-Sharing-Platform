@@ -26,6 +26,10 @@ export const signupUser = async (req, res) => {
             return res.status(400).send({ status: false, message: constant.user.emailAlreadyExists });
         }
 
+        if (body.confirmPassword !== body.password) {
+            return res.status(400).send({ status: false, message: constant.forgotPassword.validationError.passwordNotMatch })
+        }
+
         body.password = await hashPassword(body.password);
 
         if (isExistEmail && !isExistEmail.verified) {

@@ -54,6 +54,7 @@ const constant = {
         followUser: 'Follow successfully',
         unfollowUser: 'Unfollow successfully',
         hasFollow: 'has followed you',
+        updateDone: 'Update successfully',
         validationError: {
             missingFields: 'Please provide Name, Email, or Password',
             invalidName: 'Name should contain only alphabets',
@@ -63,7 +64,9 @@ const constant = {
             invalidPhone: 'Phone is invalid',
             invalidID: 'Invalid ID',
             alreadyFollow: 'You are already following this user',
-            notFollowing: 'You are not follow this user'
+            notFollowing: 'You are not follow this user',
+            missingUpdateField: 'Please provide data to update',
+            emailRestricted: 'Email is Restricted to update'
         },
         recipe: {
             recipeSaved: 'Saved Recipe',
@@ -107,6 +110,11 @@ const constant = {
         authenication: 'Authenication',
         unverified: 'Please verify first'
     },
+    message: {
+        missingMessageDetails: 'Please provide Message details',
+        messageSend: 'Message Sent',
+        notification: 'Sent a message to you',
+    }
 };
 
 export default constant;

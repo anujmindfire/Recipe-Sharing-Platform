@@ -145,8 +145,8 @@ const OTPVerification = () => {
                         {otp.map((digit, index) => (
                             <input
                                 key={index}
-                                type="text"
-                                maxLength="1"
+                                type='text'
+                                maxLength='1'
                                 value={digit}
                                 onChange={(e) => handleInputChange(e, index)}
                                 onKeyDown={(e) => handleKeyDown(e, index)}
@@ -161,7 +161,7 @@ const OTPVerification = () => {
                     <div className={styles.buttonWrapper}>
                         <button
                             className={styles.resendButton}
-                            type="button"
+                            type='button'
                             onClick={handleResendOtp}
                             disabled={status.isResendDisabled || status.loading}
                         >
@@ -169,7 +169,7 @@ const OTPVerification = () => {
                         </button>
                         <button
                             className={styles.verifyButton}
-                            type="submit"
+                            type='submit'
                             disabled={status.loading || otp.some(digit => digit === '')}
                         >
                             Verify

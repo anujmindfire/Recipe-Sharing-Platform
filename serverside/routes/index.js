@@ -6,6 +6,7 @@ import forgotPassword from './forgotPassword/index.js';
 import auth from './auth/index.js';
 import recipe from './recipe/index.js';
 import recipeFeedback from './recipeFeedback/index.js';
+import message from './message/index.js'
 import getS3URL from './getS3Url/index.js';
 
 const router = express.Router();
@@ -27,6 +28,9 @@ router.use(recipe);
 
 /****** FEEDBACK ******/
 router.use(recipeFeedback);
+
+/****** MESSAGR ******/
+router.use(message);
 
 /****** GET S3 URL ******/
 router.use(getS3URL);

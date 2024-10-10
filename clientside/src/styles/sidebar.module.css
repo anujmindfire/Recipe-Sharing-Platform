@@ -1,62 +1,38 @@
 .sidebar {
     display: flex;
-    min-width: 240px;
     flex-direction: column;
     overflow: hidden;
-    width: 320px;
-    background-color: #fff;
+    width: 250px;
+    background-color: #f4f4f4;
     padding: 16px;
-    margin-top: 120px;
-    border-right: 1px solid #ddd;
     position: relative;
+    transition: width 0.3s ease;
+    height: 100vh;
 }
 
-.profileMenu {
+.sidebar.closed {
+    width: 80px;
+}
+
+.menuToggle {
     display: flex;
-    align-items: center;
-    margin-bottom: 16px;
-    gap: 12px; 
-    margin-left: 5px;
-}
-
-.userInfo {
-    display: flex;
-    flex-direction: column;
-}
-
-.username {
-    font-size: 16px;
-    color: #1c170d;
-    font-weight: 500;
-    margin: 0;
-}
-
-.userProfile {
-    display: flex;
-    width: 100%;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
-}
-
-.profileImage {
-    width: 40px;
-    height: 40px;
-    border-radius: 20px;
-}
-
-.profileCircle {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: #009963;
-    color: #fff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 18px;
-    font-weight: bold;
+    justify-content: left;
+    align-items: left;
+    padding: 12px;
     cursor: pointer;
+    margin-top: 40px;
+    margin-left: -10px;
+}
+
+.menuToggleIcon {
+    padding: 10px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    transition: background-color 0.3s, border-color 0.3s, border-radius 0.3s;
+}
+
+.sidebarMenu {
+    flex-grow: 1;
 }
 
 .sidebarMenu ul {
@@ -73,14 +49,13 @@
     text-decoration: none;
     color: #1c170d;
     font: 500 14px 'Plus Jakarta Sans', -apple-system, Roboto, Helvetica, sans-serif;
+    transition: background-color 0.3s ease;
+    cursor: pointer;
 }
 
 .menuItem.active {
     font-weight: bold;
-}
-
-.menuItem:hover {
-    background-color: #f5f0e5;
+    background-color: #e0e0e0;
     border-radius: 8px;
 }
 
@@ -89,15 +64,19 @@
     height: 24px;
 }
 
-.sidebarMenu {
-    flex-grow: 1;
+.menuToggleIcon:hover {
+    border-color: #ccc;
+    background-color: #e0e0e0;
 }
 
-.divider {
-    width: 1px;
-    background-color: #ddd;
-    height: 100%;
-    position: absolute;
-    left: 100%;
-    top: 0;
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        margin-top: 40px;
+    }
+
+    .sidebar.closed {
+        width: 170px;
+        display: block;
+    }
 }

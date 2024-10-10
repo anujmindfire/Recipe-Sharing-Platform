@@ -1,0 +1,41 @@
+.shareButton {
+    letter-spacing: 2px;
+    font-weight: 600;
+    box-shadow: none;
+    background-color: #eee;
+    color: #7d2ae8;
+}
+
+.modalHeader {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #4a5568;
+}
+
+.modalBody {
+    padding: 1.5rem;
+}
+
+.copyLinkContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1rem;
+}
+
+.inputField {
+    flex: 1;
+    margin-right: 1rem;
+    background-color: #f7fafc;
+    border: 1px solid #cbd5e0;
+}
+
+.copyButton {
+    background-color: #4a5568;
+    color: white;
+}
+
+.copyButtonCopied {
+    background-color: #68d391;
+    color: white;
+}

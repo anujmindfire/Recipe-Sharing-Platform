@@ -26,7 +26,8 @@ export const favoritesRecipe = async (req, res) => {
         const data = await recipeModel
             .find({ _id: { $in: user.savedRecipes }, ...conditions })
             .limit(limit)
-            .skip(skip);
+            .skip(skip)
+            .sort({ title: 1 });
 
         return res.status(200).send({
             timestamp: moment().unix(),

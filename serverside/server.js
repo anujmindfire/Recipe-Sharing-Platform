@@ -23,6 +23,10 @@ app.use(express.json());
 app.use(bodyParser.json());
 app.use('/api', webRoutes);
 
+app.get('/', async (req, res) => {
+    res.send('Welcome peeps !');
+});
+
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -53,11 +57,9 @@ mongoose.connect(process.env.MONGOURL, {})
             socket.on('join', (userId) => {
                 socket.join(userId);
                 global.userSockets[userId] = socket.id;
-                console.log(`User with ID: ${userId} joined the room, Socket ID: ${socket.id}`);
             });
 
             socket.on('disconnect', () => {
-                console.log('A user disconnected:', socket.id);
                 for (const userId in global.userSockets) {
                     if (global.userSockets[userId] === socket.id) {
                         delete global.userSockets[userId];

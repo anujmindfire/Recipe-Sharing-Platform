@@ -157,7 +157,6 @@ const SignUpForm = () => {
                 <h2 className={styles.formTitle}>Sign Up</h2>
                 <Tooltip hasArrow label={errors.name} isOpen={!!errors.name} placement='top'>
                     <InputField
-                        className={styles.inputField}
                         label='Name'
                         name='name'
                         type='text'
@@ -168,7 +167,6 @@ const SignUpForm = () => {
                 </Tooltip>
                 <Tooltip hasArrow label={showHelp.email ? 'Please Enter Valid Email' : ''} isOpen={showHelp.email} placement='top'>
                     <InputField
-                        className={styles.inputField}
                         label='Email'
                         name='email'
                         type='email'
@@ -179,7 +177,6 @@ const SignUpForm = () => {
                 </Tooltip>
                 <Tooltip hasArrow label={showHelp.password ? 'Password must be 8-50 characters long consisting of at least one number, uppercase letter, lowercase letter, and special character' : ''} isOpen={showHelp.password} placement='top'>
                     <InputField
-                        className={styles.inputField}
                         label='Password'
                         name='password'
                         type='password'
@@ -190,7 +187,6 @@ const SignUpForm = () => {
                 </Tooltip>
                 <Tooltip hasArrow label={errors.confirmPassword} isOpen={!!errors.confirmPassword} placement='top'>
                     <InputField
-                        className={styles.inputField}
                         label='Confirm Password'
                         name='confirmPassword'
                         type='password'
@@ -199,15 +195,14 @@ const SignUpForm = () => {
                         onBlur={() => setFormData((prev) => ({ ...prev, errors: { ...prev.errors, confirmPassword: validateField('confirmPassword', confirmPassword) } }))}
                     />
                 </Tooltip>
+                
                 <p className={styles.prompt}>
                     Already have an account? <a href='/signin'>Sign in</a>
                 </p>
 
-                <div className={styles.buttonContainer}>
-                    <Button w='300px' type='submit' disabled={isDisabled || loading}>
-                        Sign up
-                    </Button>
-                </div>
+                <Button w='300px' type='submit' disabled={isDisabled || loading}>
+                    Sign up
+                </Button>
 
                 {loading && <Loader />}
             </form>

@@ -1,0 +1,87 @@
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    min-width: 240px;
+    width: 320px;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #f8f9fa;
+}
+
+.scrollContainer {
+    overflow-y: auto;
+    max-height: 100%;
+    padding: 16px;
+}
+
+.noDataMessage {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50vh; 
+    font-size: 1.5rem;
+    color: #555;
+    text-align: center;
+}
+
+.userListItem {
+    background-color: #ffffff;
+    display: flex;
+    min-height: 56px;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.userInfo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: #1c170d;
+}
+
+.userAvatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.userName {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.userActionWrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.userActionButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.icon {
+    width: 24px;
+    height: 24px;
+}
+
+.chatContainer {
+    display: flex;
+    height: 100vh;
+}
+
+.chatWindow {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}

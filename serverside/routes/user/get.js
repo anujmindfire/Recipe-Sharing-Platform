@@ -2,6 +2,7 @@ import { globalFilter, globalPagination, globalSearch } from '../../common/commo
 import userModel from '../../models/user.js';
 import constant from '../../utils/constant.js';
 import moment from 'moment';
+import mongoose from 'mongoose';
 
 export const getUser = async (req, res) => {
     try {
@@ -13,9 +14,8 @@ export const getUser = async (req, res) => {
         if (req.query.recipeId) {
             try {
                 const query = req.query;
-
                 let updateQuery;
-                
+
                 if (query.add === 'true') {
                     updateQuery = { $addToSet: { savedRecipes: query?.recipeId } };
                 } else if (query.add === 'false') {
@@ -34,41 +34,92 @@ export const getUser = async (req, res) => {
 
         if (req.query._id) {
             try {
-                const userData = await userModel.findById(req.user.id);
+                const userData = await userModel.findById(req.query._id).select(['name', 'email', 'bio', 'city', 'favouriteRecipe', 'state']);
                 return res.status(200).send({ status: true, message: constant.general.fetchData, data: userData });
             } catch (error) {
                 return res.status(400).send({ status: false, message: constant.general.genericError });
             }
         }
 
-        const loggedInUser = await userModel.findById(req.user.userId); 
-        const followingIds = loggedInUser.following.map(user => user._id);
-        const follwerIds = loggedInUser.followers.map(user => user._id)
+        const loggedInUser = await userModel.findById(req.user.userId).select(['following', 'followers']);
+        const followingIds = loggedInUser.following.map(id => new mongoose.Types.ObjectId(id));
+        const followerIds = loggedInUser.followers.map(id => new mongoose.Types.ObjectId(id));
 
         if (req.query.allUser) {
-            conditions._id = { $nin: [req.user.userId] }; 
+            conditions._id = { $nin: [new mongoose.Types.ObjectId(req.user.userId)] };
         }
 
         if (req.query.following) {
-            conditions._id = { $in: followingIds }; 
+            conditions._id = { $in: followingIds };
         }
 
         if (req.query.follower) {
-            conditions._id = { $in: follwerIds };
+            conditions._id = { $in: followerIds };
         }
 
         const count = await userModel.countDocuments(conditions);
-        const data = await userModel.find(conditions)
-            .skip(skip)
-            .limit(limit)
-            .sort({ id: 1 });
 
+        let users = await userModel.aggregate([
+            { $match: conditions },
+            { $sort: { name: 1 } },
+            { $skip: skip },
+            { $limit: limit },
+            {
+                $addFields: {
+                    unfollow: {
+                        $cond: {
+                            if: {
+                                $or: [
+                                    { $in: ["$_id", followingIds] },
+                                    { $in: ["$_id", followerIds] }
+                                ]
+                            },
+                            then: true,
+                            else: false
+                        }
+                    },
+                    followback: {
+                        $cond: {
+                            if: {
+                                $and: [
+                                    { $in: ["$_id", followerIds] },
+                                    { $not: { $in: ["$_id", followingIds] } }
+                                ]
+                            },
+                            then: true,
+                            else: false
+                        }
+                    },
+                    follow: {
+                        $cond: {
+                            if: {
+                                $and: [
+                                    { $not: { $in: ["$_id", followingIds] } },
+                                    { $not: { $in: ["$_id", followerIds] } }
+                                ]
+                            },
+                            then: true,
+                            else: false
+                        }
+                    }
+                }
+            },
+            {
+                $project: { 
+                    name: 1, 
+                    unfollow: 1, 
+                    followback: 1, 
+                    follow: 1 
+                }
+            }
+        ]);
+           
         return res.status(200).send({
             timestamp: moment().unix(),
-            message: data.length > 0 ? constant.general.fetchData : constant.general.notFoundData,
+            message: users.length > 0 ? constant.general.fetchData : constant.general.notFoundData,
             success: true,
             total: count,
-            data: data
+            data: users
         });
     } catch (error) {
         return res.status(400).send({ status: false, message: constant.general.genericError });

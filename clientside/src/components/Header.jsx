@@ -5,10 +5,8 @@ import Button from './Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRightFromBracket, faCircleUser } from '@fortawesome/free-solid-svg-icons';
 import { backendURL } from '../api/url';
-import Snackbar from './Snackbar';
 import ErrorModal from './ErrorModal';
 import Loader from './Loader';
-import FollowNotification from './FollowNotification';
 
 const Header = () => {
     const location = useLocation();
@@ -21,15 +19,8 @@ const Header = () => {
         loading: false,
         errorMessage: '',
         showModal: false,
-        showSnackbar: false,
         successMessage: '',
     });
-
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-    const toggleSidebar = () => {
-        setIsSidebarOpen(!isSidebarOpen);
-    };
 
     useEffect(() => {
         const token = localStorage.getItem('accesstoken');
@@ -64,7 +55,6 @@ const Header = () => {
                 setStatus((prevState) => ({
                     ...prevState,
                     successMessage: data.message,
-                    showSnackbar: true,
                     isLoggedIn: false,
                     name: '',
                 }));
@@ -73,10 +63,9 @@ const Header = () => {
                 localStorage.removeItem('refreshtoken');
                 localStorage.removeItem('id');
                 localStorage.removeItem('name');
-
-                setTimeout(() => {
-                    navigate('/signin');
-                }, 1000);
+                navigate('/signin');
+            } else if ((response.status === 401 || data.unauthorized)) {
+                return await refreshtoken(refreshtoken, userId, navigate);
             } else if (data.message && response.status !== 200) {
                 navigate('/signin');
             }
@@ -106,7 +95,7 @@ const Header = () => {
     return (
         <>
             <header className={styles.header}>
-                <div className={styles.logo} onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
+                <div className={styles.logo} onClick={handleLogoClick}>
                     <img
                         loading='lazy'
                         src='https://cdn.builder.io/api/v1/image/assets/TEMP/816ec92c75ce46d771dff7553ea02bf564ee67407d796a5c6d3243bd7a9efc0c?placeholderIfAbsent=true&apiKey=2ac8b4a54abb47edaafca4375aaa23ca'
@@ -140,13 +129,6 @@ const Header = () => {
                         )
                     ) : (
                         <div className={styles.profileMenu}>
-                            <button className={styles.iconButton} aria-label="Notifications" onClick={toggleSidebar}>
-                                <img
-                                    src="https://cdn.builder.io/api/v1/image/assets/TEMP/d38291a9b11a8859d48e42f8f0acddefed86e9d4a9f526bdd03b4d73321cd8f7?placeholderIfAbsent=true&apiKey=2ac8b4a54abb47edaafca4375aaa23ca"
-                                    alt="Notifications"
-                                    className={styles.icon}
-                                />
-                            </button>
                             <div className={styles.profileCircle} onClick={toggleDropdown}>
                                 {status.name.charAt(0).toUpperCase()}
                             </div>
@@ -169,9 +151,8 @@ const Header = () => {
                 </nav>
             </header>
 
-            <FollowNotification isVisible={isSidebarOpen} closeSidebar={toggleSidebar} />
 
-            {status.loading && <div className={styles.loaderContainer}><Loader /></div>}
+            {status.loading && <Loader />}
 
             {status.showModal && (
                 <ErrorModal
@@ -181,11 +162,6 @@ const Header = () => {
                     }}
                 />
             )}
-            <Snackbar
-                message={status.successMessage}
-                isVisible={status.showSnackbar}
-                onClose={() => setStatus((prevState) => ({ ...prevState, showSnackbar: false }))}
-            />
         </>
     );
 };

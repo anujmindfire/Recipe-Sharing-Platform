@@ -5,50 +5,21 @@
     justify-content: start;
     min-height: 800px;
     width: 100%;
-    overflow: hidden;
+    position: relative;
 }
 
-.searchFilterContainer {
+.notificationContainer {
     display: flex;
-    flex-wrap: wrap;
-    padding: 12px 16px;
-    gap: 12px;
-    margin-top: 60px;
-    width: 100%;
-    align-items: flex-start;
+    justify-content: flex-end;
+    margin-right: 40px;
+    margin-bottom: 20px;
+    margin-top: -20px; 
 }
 
-.searchWrapper {
-    display: flex;
-    width: 100%;
-    justify-content: center;
-    margin: 0 auto;
-}
-
-.searchBar {
-    border-radius: 12px;
-    display: flex;
-    width: 100%;
-    align-items: center;
-    height: 48px;
-}
-
-.searchInput {
-    border-radius: 12px;
-    background-color: #f5f0e5;
-    width: 100%;
-    color: #a1824a;
-    height: 100%;
-    padding: 8px 16px;
-    font: 400 16px Plus Jakarta Sans, sans-serif;
-    border: none;
-}
-
-.profileList {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+.scrollContainer {
+    overflow-y: auto;
+    max-height: calc(100vh - 30px);
+    padding: 16px;
 }
 
 .profileCard {
@@ -74,11 +45,6 @@
 
 .textContainer {
     margin-left: 10px;
-}
-
-.profileName {
-    font-size: 14px;
-    font-weight: 500;
 }
 
 .followButtonContainer {
@@ -120,10 +86,17 @@
     text-align: center;
 }
 
-@media (max-width: 991px) {
+@media (max-width: 768px) {
+    .profileCard {
+        flex-direction: column;
+    }
 
-    .button,
-    .buttonText {
-        white-space: initial;
+    .profileInfo {
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+
+    .followButtonContainer {
+        justify-content: center;
     }
 }
