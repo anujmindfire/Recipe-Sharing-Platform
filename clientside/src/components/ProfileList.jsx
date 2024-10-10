@@ -148,7 +148,7 @@ const ProfileList = () => {
     }, [isLoading, page, totalPages]);
 
     useEffect(() => {
-        const socket = io('http://localhost:5301');
+        const socket = io('https://foodie-6c01.onrender.com');
 
         socket.on('connect', () => {
             const userId = localStorage.getItem('id');

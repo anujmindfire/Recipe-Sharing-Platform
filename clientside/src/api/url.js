@@ -1,1 +1,1 @@
-export const backendURL = 'http://localhost:5301/api';
+export const backendURL = 'https://foodie-6c01.onrender.com/api';
