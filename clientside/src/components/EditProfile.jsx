@@ -93,7 +93,7 @@ const ProfileForm = () => {
     const fetchStates = useCallback(async () => {
         setFormData((prev) => ({ ...prev, isLoading: true }));
         try {
-            const response = await fetch('https://cdn-api.co-vin.in/api/v2/admin/location/states');
+            const response = await fetch(`${backendURL}/states`);
             const data = await response.json();
             if (response.ok) {
                 setStates(data.states);
@@ -109,7 +109,7 @@ const ProfileForm = () => {
     const fetchCities = useCallback(async (stateId) => {
         setFormData((prev) => ({ ...prev, isLoading: true }));
         try {
-            const response = await fetch(`https://cdn-api.co-vin.in/api/v2/admin/location/districts/${stateId}`);
+            const response = await fetch(`${backendURL}/city/${stateId}`);
             const data = await response.json();
             if (response.ok) {
                 setCities(data.districts);
